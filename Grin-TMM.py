@@ -10,6 +10,7 @@ from matplotlib.colors import TwoSlopeNorm
 from winspec import SpeFile
 import tmm_fast.gym_multilayerthinfilm as mltf
 from tmm_fast import coh_tmm
+from ga_thickness_optimizer import GeneticThicknessOptimizer
 
 #%% ================== Functions =====================
 def moving_average_same(a, n=5):
@@ -48,7 +49,7 @@ printing_interval = 300
 
 # -------- Angular averaging --------
 angle_min_deg = 0.0
-angle_max_deg = 1.0
+angle_max_deg = 1.0 #np.arcsin(0.55) * 180/np.pi for objective in reality
 n_angles = 1
 #===================================================
 
@@ -112,10 +113,10 @@ records = []   # list of dicts → pandas DataFrame
 
 current_init = init_thickness_nm.copy()
 
-#%% ================= Sequential optimization =================
+#%% ================= Sequential optimization (GENETIC ALGORITHM) =================
 for spec_no in range(n_spectra - 1, -1, -1):
 
-    print(f"\n=== Fitting spectrum {spec_no} ===")
+    print(f"\n=== GA fitting spectrum {spec_no} ===")
 
     target_T = torch.tensor(
         df_transmission[spec_no],
@@ -123,51 +124,87 @@ for spec_no in range(n_spectra - 1, -1, -1):
         device=device
     )
 
-    d_nm = torch.tensor(
-        [np.inf] + current_init + [np.inf],
-        dtype=torch.float64,
-        requires_grad=True,
-        device=device
-    )
-
-    T_torch = d_nm.unsqueeze(0)
-    optimizer = torch.optim.Adam([d_nm], lr=learning_rate)
-
-    for step in range(n_steps):
-        optimizer.zero_grad()
+    # ------------------------------------------------------------
+    # Fitness function for THIS spectrum
+    # ------------------------------------------------------------
+    def fitness_fn(d_layers_nm: torch.Tensor) -> float:
+        """
+        d_layers_nm: tensor [Cu, Cu2O, CuO] in nm
+        returns RMSE
+        """
+        d_full = torch.cat([
+            torch.tensor([np.inf], device=device),
+            d_layers_nm,
+            torch.tensor([np.inf], device=device),
+        ])
 
         result = coh_tmm(
             pol="s",
             N=N_torch,
-            T=T_torch,
+            T=d_full.unsqueeze(0),
             Theta=thetas,
             lambda_vacuum=lambda_nm,
             device=device
         )
 
         T_sim = result["T"][0].mean(dim=0)
+        rmse = torch.sqrt(torch.mean((T_sim - target_T) ** 2))
+        return rmse.item()
 
-        mse = torch.mean((T_sim - target_T) ** 2)
-        rmse = torch.sqrt(mse)
+    # ------------------------------------------------------------
+    # Initialize GA
+    # ------------------------------------------------------------
+    ga = GeneticThicknessOptimizer(
+        fitness_fn=fitness_fn,
+        n_layers=3,
+        population_size=60,
+        mutation_rate=0.25,
+        mutation_scale=3.0,     # nm
+        crossover_rate=0.7,
+        elite_fraction=0.2,
+        thickness_bounds=(1e-3, 300.0),
+        device=device,
+        dtype=torch.float64,
+    )
 
-        rmse.backward()
-        optimizer.step()
+    ga.initialize_population(
+        init_guess=torch.tensor(current_init, device=device)
+    )
 
-        # thickness constraints
-        with torch.no_grad():
-            d_nm[1:-1].clamp_(1e-3, 300.0)
+    # ------------------------------------------------------------
+    # Run GA
+    # ------------------------------------------------------------
+    best_thickness = ga.run(
+        n_generations=50,
+        verbose=True
+    )
 
-        if step % printing_interval == 0:
-            print(
-                f"  Step {step:3d} | "
-                f"RMSE = {rmse.item():.4e} | "
-                f"d = {d_nm[1:-1].detach().cpu().numpy()}"
-            )
+    # ------------------------------------------------------------
+    # Final forward pass for storage
+    # ------------------------------------------------------------
+    d_nm = torch.cat([
+        torch.tensor([np.inf], device=device),
+        best_thickness,
+        torch.tensor([np.inf], device=device),
+    ])
 
-    # ---- save results ----
+    result = coh_tmm(
+        pol="s",
+        N=N_torch,
+        T=d_nm.unsqueeze(0),
+        Theta=thetas,
+        lambda_vacuum=lambda_nm,
+        device=device
+    )
+
+    T_sim = result["T"][0].mean(dim=0)
+
+    # ------------------------------------------------------------
+    # Save results (UNCHANGED FORMAT)
+    # ------------------------------------------------------------
     T_sim_np = T_sim.detach().cpu().numpy()
-    thicknesses = d_nm[1:-1].detach().cpu().numpy()
-    rmse_val = rmse.item()
+    thicknesses = best_thickness.detach().cpu().numpy()
+    rmse_val = fitness_fn(best_thickness)
 
     for i_wl, wl in enumerate(wl_nm):
         records.append({
@@ -181,7 +218,11 @@ for spec_no in range(n_spectra - 1, -1, -1):
             "RMSE": rmse_val
         })
 
+    # ------------------------------------------------------------
+    # Warm start next spectrum
+    # ------------------------------------------------------------
     current_init = thicknesses.tolist()
+
 
 #%% ================= Save results =================
 df_results = pd.DataFrame.from_records(records)
@@ -194,7 +235,7 @@ print("\nSaved results to:")
 print(out_base.with_suffix(".pkl"))
 print(out_base.with_suffix(".csv"))
 
-#%% ================= Example plot =================
+""" #%% ================= Example plot =================
 last_spec = n_spectra - 1
 df_last = df_results[df_results["spectrum"] == last_spec]
 
@@ -300,3 +341,4 @@ plt.savefig("T_diff_2D.png", dpi=300)
 plt.show()
 
 # %%
+ """
