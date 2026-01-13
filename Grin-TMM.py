@@ -125,12 +125,18 @@ for spec_no in range(n_spectra - 1, -1, -1):
     )
 
     # ------------------------------------------------------------
-    # Fitness function for THIS spectrum
+    # Fitness functions
     # ------------------------------------------------------------
-    def fitness_fn(d_layers_nm: torch.Tensor) -> float:
+    def fitness_fn_ga(d_layers_nm: torch.Tensor) -> float:
+        """GA version: returns float"""
+        with torch.no_grad():
+            loss = fitness_fn_torch(d_layers_nm)
+        return loss.item()
+
+
+    def fitness_fn_torch(d_layers_nm: torch.Tensor) -> torch.Tensor:
         """
-        d_layers_nm: tensor [Cu, Cu2O, CuO] in nm
-        returns RMSE
+        Differentiable RMSE for gradient descent
         """
         d_full = torch.cat([
             torch.tensor([np.inf], device=device),
@@ -149,17 +155,17 @@ for spec_no in range(n_spectra - 1, -1, -1):
 
         T_sim = result["T"][0].mean(dim=0)
         rmse = torch.sqrt(torch.mean((T_sim - target_T) ** 2))
-        return rmse.item()
+        return rmse
 
     # ------------------------------------------------------------
     # Initialize GA
     # ------------------------------------------------------------
     ga = GeneticThicknessOptimizer(
-        fitness_fn=fitness_fn,
+        fitness_fn=fitness_fn_ga,
         n_layers=3,
         population_size=60,
         mutation_rate=0.25,
-        mutation_scale=3.0,     # nm
+        mutation_scale=5.0,     # nm
         crossover_rate=0.7,
         elite_fraction=0.2,
         thickness_bounds=(1e-3, 300.0),
@@ -178,6 +184,39 @@ for spec_no in range(n_spectra - 1, -1, -1):
         n_generations=50,
         verbose=True
     )
+
+    # ------------------------------------------------------------
+    # Gradient-based refinement (Adam)
+    # ------------------------------------------------------------
+    d_opt = torch.nn.Parameter(
+        best_thickness.clone().detach()
+    )
+
+    optimizer = torch.optim.Adam(
+        [d_opt],
+        lr=0.05   # good starting point for nm-scale problems
+    )
+
+    n_refine_steps = 200
+
+    for step in range(n_refine_steps):
+        optimizer.zero_grad()
+
+        loss = fitness_fn_torch(d_opt)
+        loss.backward()
+        optimizer.step()
+
+        # Hard physical bounds
+        with torch.no_grad():
+            d_opt.clamp_(1e-3, 300.0)
+
+        if step % 50 == 0:
+            print(
+                f"  Adam step {step:3d} | RMSE = {loss.item():.4e} | "
+                f"d = {d_opt.detach().cpu().numpy()}"
+            )
+
+    best_thickness = d_opt.detach()
 
     # ------------------------------------------------------------
     # Final forward pass for storage
@@ -204,7 +243,7 @@ for spec_no in range(n_spectra - 1, -1, -1):
     # ------------------------------------------------------------
     T_sim_np = T_sim.detach().cpu().numpy()
     thicknesses = best_thickness.detach().cpu().numpy()
-    rmse_val = fitness_fn(best_thickness)
+    rmse_val = fitness_fn_ga(best_thickness)
 
     for i_wl, wl in enumerate(wl_nm):
         records.append({

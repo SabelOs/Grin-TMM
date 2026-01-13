@@ -151,3 +151,5 @@ plt.savefig(out_dir / "T_diff_2D.png", dpi=300)
 plt.show()
 
 print("\nAll plots saved to:", out_dir)
+
+# %%
