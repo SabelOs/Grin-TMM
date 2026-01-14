@@ -16,10 +16,7 @@ out_dir = Path(__file__).parent / "plots"
 out_dir.mkdir(exist_ok=True)
 
 #%% ================== Load results =====================
-if use_pickle:
-    df_results = pd.read_pickle(results_base.with_suffix(".pkl"))
-else:
-    df_results = pd.read_csv(results_base.with_suffix(".csv"))
+df_results = pd.read_csv(results_base.with_suffix(".csv"))
 
 print("Loaded results:")
 print(df_results.head())
