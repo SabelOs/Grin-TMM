@@ -4,10 +4,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.colors import TwoSlopeNorm
 from pathlib import Path
-
+import re
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-results_base = Path(__file__).parent / "tmm_fit_results"
+results_base = Path(__file__).parent / "tmm_fit_results_pop30_step100"
 
 use_pickle = True   # set False to use CSV instead
 
@@ -20,7 +20,7 @@ df_results = pd.read_csv(results_base.with_suffix(".csv"))
 
 print("Loaded results:")
 print(df_results.head())
-
+print(df_results.columns[10:])
 #%% ================== Basic info =====================
 spectra = df_results["spectrum"].unique()
 wavelengths = df_results["wavelength_nm"].unique()
@@ -33,6 +33,7 @@ df = df_results.sort_values(["spectrum", "wavelength_nm"])
 
 #%% ================== 1) Last spectrum comparison =====================
 last_spec = spectra.max()
+last_spec = 19
 df_last = df[df["spectrum"] == last_spec]
 
 plt.figure(figsize=(6, 4))
@@ -62,6 +63,7 @@ plt.savefig(out_dir / "RMSE_vs_spectrum.png", dpi=300)
 plt.show()
 
 #%% ================== 3) Thickness evolution =====================
+"""
 plt.figure(figsize=(6, 4))
 (
     df.groupby("spectrum")[["Cu_nm", "Cu2O_nm", "CuO_nm"]]
@@ -75,7 +77,75 @@ plt.grid(True, alpha=0.3)
 plt.tight_layout()
 plt.savefig(out_dir / "thickness_evolution.png", dpi=300)
 plt.show()
+"""
 
+# --- find all material indices automatically ---
+material_indices = sorted(
+    {
+        int(m.group(1))
+        for c in df.columns
+        if (m := re.match(r"material_(\d+)_thickness_nm", c))
+    }
+)
+
+# --- build thickness dataframe and legend labels ---
+thickness_cols = []
+legend_labels = []
+
+for i in material_indices:
+    t_col = f"material_{i}_thickness_nm"
+    thickness_cols.append(t_col)
+
+    # extract metadata from first spectrum (assumed constant per layer)
+    row = df.iloc[0]
+
+    mat_name  = row.get(f"material_{i}_name", f"material_{i}")
+    mat_shape = row.get(f"material_{i}_shape", None)
+
+    label = mat_name
+    if mat_shape and str(mat_shape) != "nan":
+        label += f" ({mat_shape})"
+
+    # inclusion info (optional)
+    inc_name = row.get(f"inclusion_{i}_name", None)
+    if inc_name and str(inc_name) != "nan":
+        inc_shape = row.get(f"inclusion_{i}_shape", "")
+        inc_vf    = row.get(f"inclusion_{i}_volume_fraction", "")
+
+        inc_label = inc_name
+        if inc_shape and str(inc_shape) != "nan":
+            inc_label += f", {inc_shape}"
+        if inc_vf and str(inc_vf) != "nan":
+            inc_label += f", vf={inc_vf:.2f}"
+
+        label += f"\n+ {inc_label}"
+
+    legend_labels.append(label)
+
+# --- group by spectrum and plot ---
+plt.figure(figsize=(6, 4))
+
+(
+    df.groupby("spectrum")[thickness_cols]
+      .first()
+      .plot(ax=plt.gca())
+)
+
+plt.xlabel("Spectrum index")
+plt.ylabel("Thickness (nm)")
+plt.title("Layer thickness evolution")
+plt.grid(True, alpha=0.3)
+
+plt.legend(
+    legend_labels,
+    title="Layers",
+    fontsize=9,
+    title_fontsize=10
+)
+
+plt.tight_layout()
+plt.savefig(out_dir / "thickness_evolution.png", dpi=300)
+plt.show()
 #%% ================== 4) Residuals =====================
 df["residual"] = df["T_fit"] - df["T_exp"]
 

@@ -30,6 +30,8 @@ class GeneticThicknessOptimizer:
         self.elite_fraction = elite_fraction
         self.device = device
         self.mutation_scale_thickness = mutation_scale_thickness
+        #define thickness and volume fraction bounds
+
     
     def _project_bounds(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -38,43 +40,47 @@ class GeneticThicknessOptimizer:
         """
         x = x.clone()
 
-        n_layers = len(self.f_bounds)
-
+        n_layers = int(self.n_params/2) #divide by 2 as there are allways volume fractiona and layerthickness per layer
+        n_fractions = len(self.f_bounds)  # number of volume-fraction genes
+        
         # --- Thickness bounds ---
         x[:n_layers] = x[:n_layers].clamp(self.tmin, self.tmax)
 
         # --- Volume fraction bounds ---
-        for i, (fmin, fmax) in enumerate(self.f_bounds):
-            idx = n_layers + i
-            x[idx] = x[idx].clamp(fmin, fmax)
-
+        for i in range(n_fractions):
+            fmin, fmax = self.f_bounds[i]
+            x[n_layers + i] = x[n_layers + i].clamp(fmin, fmax)
         return x
 
     def initialize(self, d_init, f_init):
         """
-        Initialize population using individual-level mutation probability.
+        Initialize population:
+        - First individual is exactly the initial guess
+        - Remaining individuals are noisy variants
         """
         self.population = []
 
         base = torch.cat([d_init, f_init]).to(self.device)
         n_layers = len(self.f_bounds)
 
-        for _ in range(self.population_size):
+        # --- First individual: exact initial guess ---
+        self.population.append(self._project_bounds(base.clone()))
+
+        # --- Remaining individuals: noisy variants ---
+        for _ in range(self.population_size - 1):
             ind = base.clone()
 
-            # --- Individual-level mutation roll ---
-            if torch.rand(1, device=self.device) < self.mutation_rate:
-                # Thickness mutation
-                ind[:n_layers] += (
-                    torch.randn(n_layers, device=self.device)
-                    * self.mutation_scale_thickness
-                )
-            if torch.rand(1, device=self.device) < self.mutation_rate:
-                # Volume fraction mutation
-                ind[n_layers:] += (
-                    torch.randn(n_layers, device=self.device)
-                    * self.mutation_scale_volume_fraction
-                )
+            # Thickness noise
+            ind[:n_layers] += (
+                torch.randn(n_layers, device=self.device)
+                * self.mutation_scale_thickness
+            )
+
+            # Volume fraction noise
+            ind[n_layers:] += (
+                torch.randn(n_layers, device=self.device)
+                * self.mutation_scale_volume_fraction
+            )
 
             ind = self._project_bounds(ind)
             self.population.append(ind)
@@ -96,10 +102,15 @@ class GeneticThicknessOptimizer:
         n_layers = len(self.f_bounds)
 
         while len(new_population) < self.population_size:
-            parent = elites[np.random.randint(len(elites))]
-            child = parent.clone()
+            # --- Select two parents ---
+            parent1 = elites[np.random.randint(len(elites))]
+            parent2 = elites[np.random.randint(len(elites))]
 
-            # --- Individual-level mutation rolls ---
+            # --- Gene-wise crossover ---
+            mask = torch.rand(self.n_params, device=self.device) < 0.5
+            child = torch.where(mask, parent1, parent2).clone()
+
+            # --- Individual-level mutation ---
             if torch.rand(1, device=self.device) < self.mutation_rate:
                 # Thickness mutation
                 child[:n_layers] += (
@@ -123,8 +134,22 @@ class GeneticThicknessOptimizer:
     def run(self, generations):
         for g in range(generations):
             self.step()
+            
+            #Print the info of the best species
             best = torch.argmin(self.fitness)
-            print(f"GA Gen {g:03d} | RMSE={self.fitness[best]:.4}")
+            best_ind = self.population[best]
+
+            n_layers = len(self.f_bounds)
+            d_vals = best_ind[:n_layers]
+            f_vals = best_ind[n_layers:]
+
+            d_str = ", ".join([f"{d:.2f}" for d in d_vals])
+            f_str = ", ".join([f"{f:.4f}" for f in f_vals])
+
+            print(
+                f"GA Gen {g:03d} | RMSE={self.fitness[best]:.4} | "
+                f"d = [{d_str}] | f = [{f_str}]"
+            )
 
         best = torch.argmin(self.fitness)
         return self.population[best].detach()

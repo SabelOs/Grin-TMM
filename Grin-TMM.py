@@ -25,42 +25,59 @@ materials = {
     "Cu2O": path + "/OpticalConstants/nk_Cu2O.txt",
     "CuO":  path + "/OpticalConstants/nk_CuO.txt",
 }
-
+"""{
+            "material": "Cu2O",
+            "shape": "sphere",
+            "fraction_init": 0.0,
+            "bounds": (0.0, 0.3),
+        }"""
 layers = [
     {
         "name": "Cu",
         "matrix": "Cu",
         "shape": "sphere",
-        "thickness_init": 22.0,
-        "inclusion": {
-            "material": "Cu2O",
-            "shape": "sphere",
-            "fraction_init": 0.01,
-            "bounds": (0.0, 0.3),
-        },
+        "thickness_init": 25.0,
+        "inclusion": None,
     },
     {
         "name": "Cu2O",
         "matrix": "Cu2O",
         "shape": "sphere",
-        "thickness_init": 1.0,
-        "inclusion": None,
+        "thickness_init": 0.1,
+        "inclusion": {
+            "material": "Cu",
+            "shape": "chain",
+            "fraction_init": 0.0,
+            "bounds": (0.0, 0.3),
+        },
     },
     {
         "name": "CuO",
         "matrix": "CuO",
         "shape": "sphere",
-        "thickness_init": 1.0,
+        "thickness_init": 0.1,
         "inclusion": None,
     },
 ]
-
+#--------- File Settings -----------
 SPE_file  = path + "/GRIN.SPE"
 Lamp_file = path + "/Substrate.SPE"
 
+spectra_fitting_range = -1 #set to -1 to fit all spectra imported
+
+#-------- GA Settings -------------
 device = "cpu"
-pop_size = 20
-generations = 20
+pop_size = 30
+generations = 100
+mutation_scale_thickness = 10
+mutation_scale_volume_fraction= 0.05
+elite_percentage = 0.1
+mutation_rate = 0.1
+# -------- Wavelength cut -------- 
+enable_wl_cut = True 
+wl_opt_min = 500.0 
+wl_opt_max = 950.0
+
 #%% ================= Load data =================
 wl_nm = SpeFile(SPE_file).xaxis.astype(np.float64)
 I = SpeFile(SPE_file).data[:, :, 0]
@@ -71,9 +88,17 @@ I_lamp = moving_average_same(I_lamp, 5)
 
 T_exp_all = I / I_lamp
 
+if enable_wl_cut: 
+    wl_mask = (wl_nm >= wl_opt_min) & (wl_nm <= wl_opt_max) 
+    wl_nm = wl_nm[wl_mask] 
+    T_exp_all = T_exp_all[:, wl_mask]
+
 lambda_nm = torch.tensor(wl_nm, dtype=torch.float64, device=device)
 
 n_spec = T_exp_all.shape[0]
+
+if spectra_fitting_range == -1:
+    spectra_fitting_range = n_spec
 #%% ================= Refractive indices =================
 N_np = mltf.get_N(
     list(materials.values()),
@@ -152,9 +177,9 @@ def fitness_torch(d, f, target_T):
     return torch.sqrt(torch.mean((T_sim - target_T) ** 2))
 
 #%% ================= Main loop =================
-for spec in range(T_exp_all.shape[0]):
-    
-    print(f"\n=== Fitting spectrum {spec + 1} / {n_spec} ===")
+for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
+
+    print(f"\n=== Fitting spectrum {n_spec - spec} / {spectra_fitting_range} ===")
     
     target_T = torch.tensor(T_exp_all[spec], dtype=torch.float64)
 
@@ -170,6 +195,11 @@ for spec in range(T_exp_all.shape[0]):
         bounds_thickness=(1e-3, 300.0),
         bounds_fraction=fraction_bounds,
         population_size = pop_size,
+        mutation_rate=mutation_rate,
+        elite_fraction=elite_percentage,
+        device=device,
+        mutation_scale_volume_fraction = mutation_scale_volume_fraction,
+        mutation_scale_thickness = mutation_scale_thickness
     )
 
     ga.initialize(init_d, init_f)
@@ -177,6 +207,10 @@ for spec in range(T_exp_all.shape[0]):
 
     d_best = best[:len(layers)]
     f_best = best[len(layers):]
+
+    #set the best fitting options from the last spectrum as init guess for next one
+    init_d = d_best
+    init_f = f_best
 
     #Compute the final optimization once (to safe)
     with torch.no_grad():

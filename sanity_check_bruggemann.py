@@ -30,7 +30,7 @@ d_eff_nm = 25.0
 f_Cu2O_list = np.linspace(0.0, 1, 20)
 
 # -------- Geometry --------
-shape_Cu   = "sphere"   # metallic connectivity
+shape_Cu   = "chain"   # metallic connectivity
 shape_Cu2O = "sphere"
 
 # -------- Angle --------
