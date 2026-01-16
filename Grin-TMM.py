@@ -115,12 +115,14 @@ records = []
 
 init_d = torch.tensor(
     [l["thickness_init"] for l in layers],
-    dtype=torch.float64
+    dtype=torch.float64,
+    device=device,
 )
 
 init_f = torch.tensor(
     [l["inclusion"]["fraction_init"] if l["inclusion"] else 0.0 for l in layers],
-    dtype=torch.float64
+    dtype=torch.float64,
+    device=device,
 )
 
 fraction_bounds = [
@@ -130,12 +132,13 @@ fraction_bounds = [
 
 def fitness_torch(d, f, target_T):
 
-    N_list = [torch.ones_like(lambda_nm, dtype=torch.complex128)]
+    N_list = [torch.ones_like(lambda_nm, dtype=torch.complex128,device=device)]
 
     for i, layer in enumerate(layers):
         n_mat = torch.tensor(
             N_np[mat_index[layer["matrix"]]],
             dtype=torch.complex128,
+            device=device,
         )
 
         if material_mixing and layer["inclusion"]:
@@ -144,6 +147,7 @@ def fitness_torch(d, f, target_T):
             n_inc = torch.tensor(
                 N_np[mat_index[inc["material"]]],
                 dtype=torch.complex128,
+                device=device,
             )
             n_eff = bruggeman_n(
                 n1=n_mat,
@@ -160,9 +164,9 @@ def fitness_torch(d, f, target_T):
     N = torch.stack(N_list).unsqueeze(0)
 
     d_full = torch.cat([
-        torch.tensor([np.inf]),
-        d,
-        torch.tensor([np.inf]),
+        torch.tensor([np.inf],device=device),
+        d.to(device),
+        torch.tensor([np.inf],device=device),
     ])
 
     T_sim = coh_tmm(
@@ -181,7 +185,7 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
 
     print(f"\n=== Fitting spectrum {n_spec - spec} / {spectra_fitting_range} ===")
     
-    target_T = torch.tensor(T_exp_all[spec], dtype=torch.float64)
+    target_T = torch.tensor(T_exp_all[spec], dtype=torch.float64, device=device)
 
     def fitness_ga(x):
         with torch.no_grad():
@@ -220,6 +224,7 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
             n_mat = torch.tensor(
                 N_np[mat_index[layer["matrix"]]],
                 dtype=torch.complex128,
+                device=device,
             )
 
             if material_mixing and layer["inclusion"]:
@@ -228,6 +233,7 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
                 n_inc = torch.tensor(
                     N_np[mat_index[inc["material"]]],
                     dtype=torch.complex128,
+                    device = device,
                 )
                 n_eff = bruggeman_n(
                     n1=n_mat,
@@ -244,9 +250,9 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
         N = torch.stack(N_list).unsqueeze(0)
 
         d_full = torch.cat([
-            torch.tensor([np.inf]),
-            d_best,
-            torch.tensor([np.inf]),
+            torch.tensor([np.inf],device=device),
+            d_best.to(device),
+            torch.tensor([np.inf],device=device),
         ])
 
         T_sim = coh_tmm(
