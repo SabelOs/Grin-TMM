@@ -7,12 +7,15 @@ from pathlib import Path
 import re
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-results_base = Path(__file__).parent / "tmm_fit_results_pop30_step100"
+fileName = "sample6_Cu_Cu2O-CuSphere_CuO_20xObj.csv"
+results_base = Path(__file__).parent / fileName
+
 
 use_pickle = True   # set False to use CSV instead
 
 # Output directory for plots
-out_dir = Path(__file__).parent / "plots"
+outDirName = "plots_" + fileName[:-4]
+out_dir = Path(__file__).parent / outDirName
 out_dir.mkdir(exist_ok=True)
 
 #%% ================== Load results =====================
@@ -33,7 +36,7 @@ df = df_results.sort_values(["spectrum", "wavelength_nm"])
 
 #%% ================== 1) Last spectrum comparison =====================
 last_spec = spectra.max()
-last_spec = 19
+last_spec = 60
 df_last = df[df["spectrum"] == last_spec]
 
 plt.figure(figsize=(6, 4))
@@ -44,7 +47,7 @@ plt.ylabel("Transmittance")
 plt.title(f"Spectrum {last_spec}: Fit vs Experiment")
 plt.legend()
 plt.tight_layout()
-plt.savefig(out_dir / "comparison_last_spectrum.png", dpi=300)
+#plt.savefig(out_dir / "comparison_last_spectrum.png", dpi=300)
 plt.show()
 
 #%% ================== 2) RMSE vs spectrum =====================

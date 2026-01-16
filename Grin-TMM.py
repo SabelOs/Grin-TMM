@@ -46,7 +46,7 @@ layers = [
         "thickness_init": 0.1,
         "inclusion": {
             "material": "Cu",
-            "shape": "chain",
+            "shape": "sphere",
             "fraction_init": 0.0,
             "bounds": (0.0, 0.3),
         },
@@ -60,19 +60,19 @@ layers = [
     },
 ]
 #--------- File Settings -----------
-SPE_file  = path + "/GRIN.SPE"
-Lamp_file = path + "/Substrate.SPE"
+SPE_file  = path + "/GRIN-Sample6-Biggest.SPE"
+Lamp_file = path + "/Substrate1.SPE"
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-
+saveName = "sample6_Cu_Cu2O-CuSphere_CuO_20xObj"
 #-------- GA Settings -------------
 device = "cpu"
 pop_size = 30
-generations = 100
-mutation_scale_thickness = 10
-mutation_scale_volume_fraction= 0.05
+generations = 50
+mutation_scale_thickness = 1.2
+mutation_scale_volume_fraction= 0.02
 elite_percentage = 0.1
-mutation_rate = 0.1
+mutation_rate = 0.2
 # -------- Wavelength cut -------- 
 enable_wl_cut = True 
 wl_opt_min = 500.0 
@@ -297,6 +297,7 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
 
 #%% ================= Save =================
 df = pd.DataFrame(records)
-out = Path(path) / "tmm_fit_results.csv"
+outFileName = saveName + ".csv"
+out = Path(path) / outFileName
 df.to_csv(out, index=False)
 print("Saved:", out)
