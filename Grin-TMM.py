@@ -46,7 +46,7 @@ layers = [
         "thickness_init": 0.1,
         "inclusion": {
             "material": "Cu",
-            "shape": "sphere",
+            "shape": "chain",
             "fraction_init": 0.0,
             "bounds": (0.0, 0.3),
         },
@@ -60,11 +60,11 @@ layers = [
     },
 ]
 #--------- File Settings -----------
-SPE_file  = path + "/GRIN-Sample6-Biggest.SPE"
-Lamp_file = path + "/Substrate1.SPE"
+SPE_file  = path + "/Sample5-12W-3s-GRIN.SPE"
+Lamp_file = path + "/Substrate-sample5.SPE"
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample6_Cu_Cu2O-CuSphere_CuO_20xObj"
+saveName = "sample5_Cu_Cu2O-CuSphere_CuO_50xObj"
 #-------- GA Settings -------------
 device = "cpu"
 pop_size = 30
@@ -87,6 +87,10 @@ I = np.array([moving_average_same(x, 5) for x in I])
 I_lamp = moving_average_same(I_lamp, 5)
 
 T_exp_all = I / I_lamp
+
+if np.any((T_exp_all < 0) | (T_exp_all > 1)):
+    print("WARNING: T_exp_all contains values outside the [0, 1] interval.\n")
+    print(f"T_exp_all min = {T_exp_all.min():.3g}, max = {T_exp_all.max():.3g}\n")
 
 if enable_wl_cut: 
     wl_mask = (wl_nm >= wl_opt_min) & (wl_nm <= wl_opt_max) 

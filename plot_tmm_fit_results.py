@@ -5,9 +5,10 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import TwoSlopeNorm
 from pathlib import Path
 import re
+from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample6_Cu_Cu2O-CuSphere_CuO_20xObj.csv"
+fileName = "sample5_Cu_Cu2O-CuSphere_CuO_50xObj.csv"
 results_base = Path(__file__).parent / fileName
 
 
@@ -36,7 +37,7 @@ df = df_results.sort_values(["spectrum", "wavelength_nm"])
 
 #%% ================== 1) Last spectrum comparison =====================
 last_spec = spectra.max()
-last_spec = 60
+last_spec = 1
 df_last = df[df["spectrum"] == last_spec]
 
 plt.figure(figsize=(6, 4))
@@ -81,67 +82,80 @@ plt.tight_layout()
 plt.savefig(out_dir / "thickness_evolution.png", dpi=300)
 plt.show()
 """
+addMaterialFractions = False  # <<< USER OPTION
 
-# --- find all material indices automatically ---
+# --- find material indices automatically ---
 material_indices = sorted(
-    {
-        int(m.group(1))
-        for c in df.columns
-        if (m := re.match(r"material_(\d+)_thickness_nm", c))
-    }
+    int(m.group(1))
+    for c in df.columns
+    if (m := re.match(r"material_(\d+)_thickness_nm", c))
 )
 
-# --- build thickness dataframe and legend labels ---
-thickness_cols = []
+# --- container for effective thickness contributions ---
+# key = material name, value = list of per-spectrum thicknesses
+material_thickness = defaultdict(list)
+
+# --- group by spectrum ---
+grouped = df.groupby("spectrum").first()
+
+for spectrum, row in grouped.iterrows():
+
+    # temporary storage per spectrum
+    spectrum_contrib = defaultdict(float)
+
+    for i in material_indices:
+        d = row.get(f"material_{i}_thickness_nm", 0.0)
+        if pd.isna(d) or d == 0:
+            continue
+
+        # --- matrix ---
+        mat_name = row.get(f"material_{i}_name", f"material_{i}")
+        f_mat = row.get(f"material_{i}_volume_fraction", 1.0)
+
+        spectrum_contrib[(mat_name, "matrix", i)] += f_mat * d
+
+        # --- inclusion ---
+        inc_name = row.get(f"inclusion_{i}_name", None)
+        if inc_name and not pd.isna(inc_name):
+            f_inc = row.get(f"inclusion_{i}_volume_fraction", 0.0)
+            spectrum_contrib[(inc_name, "inclusion", i)] += f_inc * d
+
+    # --- merge or keep separate ---
+    if addMaterialFractions:
+        merged = defaultdict(float)
+        for (name, _, _), val in spectrum_contrib.items():
+            merged[name] += val
+        for name in merged:
+            material_thickness[name].append(merged[name])
+    else:
+        for key, val in spectrum_contrib.items():
+            material_thickness[key].append(val)
+
+# --- build dataframe for plotting ---
+plot_df = pd.DataFrame(material_thickness, index=grouped.index)
+
+# --- build legend labels ---
 legend_labels = []
-
-for i in material_indices:
-    t_col = f"material_{i}_thickness_nm"
-    thickness_cols.append(t_col)
-
-    # extract metadata from first spectrum (assumed constant per layer)
-    row = df.iloc[0]
-
-    mat_name  = row.get(f"material_{i}_name", f"material_{i}")
-    mat_shape = row.get(f"material_{i}_shape", None)
-
-    label = mat_name
-    if mat_shape and str(mat_shape) != "nan":
-        label += f" ({mat_shape})"
-
-    # inclusion info (optional)
-    inc_name = row.get(f"inclusion_{i}_name", None)
-    if inc_name and str(inc_name) != "nan":
-        inc_shape = row.get(f"inclusion_{i}_shape", "")
-        inc_vf    = row.get(f"inclusion_{i}_volume_fraction", "")
-
-        inc_label = inc_name
-        if inc_shape and str(inc_shape) != "nan":
-            inc_label += f", {inc_shape}"
-        if inc_vf and str(inc_vf) != "nan":
-            inc_label += f", vf={inc_vf:.2f}"
-
-        label += f"\n+ {inc_label}"
-
+for col in plot_df.columns:
+    if isinstance(col, tuple):
+        name, role, idx = col
+        label = f"{name} ({role}, layer {idx})"
+    else:
+        label = col
     legend_labels.append(label)
 
-# --- group by spectrum and plot ---
+# --- plot ---
 plt.figure(figsize=(6, 4))
-
-(
-    df.groupby("spectrum")[thickness_cols]
-      .first()
-      .plot(ax=plt.gca())
-)
+plot_df.plot(ax=plt.gca())
 
 plt.xlabel("Spectrum index")
-plt.ylabel("Thickness (nm)")
-plt.title("Layer thickness evolution")
+plt.ylabel("Effective thickness (nm)")
+plt.title("Volume-fraction–corrected thickness evolution")
 plt.grid(True, alpha=0.3)
 
 plt.legend(
     legend_labels,
-    title="Layers",
+    title="Materials",
     fontsize=9,
     title_fontsize=10
 )
@@ -221,5 +235,6 @@ plt.savefig(out_dir / "T_diff_2D.png", dpi=300)
 plt.show()
 
 print("\nAll plots saved to:", out_dir)
+
 
 # %%
