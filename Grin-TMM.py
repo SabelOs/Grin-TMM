@@ -2,6 +2,7 @@
 import numpy as np
 import torch
 import pandas as pd
+import matplotlib.pyplot as plt
 from pathlib import Path
 from scipy.ndimage import uniform_filter1d
 
@@ -47,6 +48,7 @@ layers = [
         "inclusion": {
             "material": "Cu",
             "shape": "chain",
+            "shape": "chain",
             "fraction_init": 0.0,
             "bounds": (0.0, 0.3),
         },
@@ -60,19 +62,31 @@ layers = [
     },
 ]
 #--------- File Settings -----------
-SPE_file  = path + "/Sample5-12W-3s-GRIN.SPE"
-Lamp_file = path + "/Substrate-sample5.SPE"
+#SPE_file  = path + "/Sample1_BiggestGrin.SPE"
+#Lamp_file = path + "/Substrate_Xe.SPE"#"/Substrate-20xObj.SPE"
+SPE_file  = path + "/20_01_2026_Xe_lamp/Sample6-Xe-BiggestGrin.SPE"
+Lamp_file = path + "/20_01_2026_Xe_lamp/Sample6-Xe-BiggestGrin-Substrate.SPE"
+
+exclude_even_spectra = True #This option is only used for the case where no automatic shutter is located at the spectrometer and there allways need to be one "flush" spectrum
+substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample5_Cu_Cu2O-CuSphere_CuO_50xObj"
+saveName = "sample1_Cu_Cu2O-CuChain_CuO_50xObj_Xe"
 #-------- GA Settings -------------
 device = "cpu"
 pop_size = 30
-generations = 50
+generations = 70
+mutation_scale_thickness = 15
+mutation_scale_volume_fraction= 0.05
+elite_percentage = 0.1
+mutation_rate = 0.07
+"""
+Default Values for GA:
 mutation_scale_thickness = 1.2
 mutation_scale_volume_fraction= 0.02
 elite_percentage = 0.1
 mutation_rate = 0.2
+"""
 # -------- Wavelength cut -------- 
 enable_wl_cut = True 
 wl_opt_min = 500.0 
@@ -80,8 +94,11 @@ wl_opt_max = 950.0
 
 #%% ================= Load data =================
 wl_nm = SpeFile(SPE_file).xaxis.astype(np.float64)
-I = SpeFile(SPE_file).data[:, :, 0]
-I_lamp = SpeFile(Lamp_file).data[0, :, 0]
+if exclude_even_spectra:
+    I = SpeFile(SPE_file).data[1::2, :, 0]  # spectra 0, 2, 4, ...
+else:
+    I = SpeFile(SPE_file).data[:, :, 0]
+I_lamp = SpeFile(Lamp_file).data[substrateSpectrum_no, :, 0]
 
 I = np.array([moving_average_same(x, 5) for x in I])
 I_lamp = moving_average_same(I_lamp, 5)
@@ -97,12 +114,27 @@ if enable_wl_cut:
     wl_nm = wl_nm[wl_mask] 
     T_exp_all = T_exp_all[:, wl_mask]
 
+    I_lamp = I_lamp[wl_mask]
+    I = I[:,wl_mask]
 lambda_nm = torch.tensor(wl_nm, dtype=torch.float64, device=device)
 
 n_spec = T_exp_all.shape[0]
 
 if spectra_fitting_range == -1:
     spectra_fitting_range = n_spec
+#%% Test plotting code
+
+plt.figure()
+plt.plot(wl_nm,I[69,:],color="red")
+plt.plot(wl_nm, I_lamp)
+
+print("WL Shape:" + str(wl_nm.shape))
+print("Lamp Shape:" + str(I_lamp.shape))
+print("Transmission Shape:" + str(T_exp_all[0].shape))
+
+#%%
+plt.figure()
+plt.plot(wl_nm,I[69,:]/I_lamp,color="red")
 #%% ================= Refractive indices =================
 N_np = mltf.get_N(
     list(materials.values()),

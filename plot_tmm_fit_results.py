@@ -6,9 +6,10 @@ from matplotlib.colors import TwoSlopeNorm
 from pathlib import Path
 import re
 from collections import defaultdict
+from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample5_Cu_Cu2O-CuSphere_CuO_50xObj.csv"
+fileName = "sample6_Cu_Cu2O-CuSphere_CuO_20xObj.csv"
 results_base = Path(__file__).parent / fileName
 
 
@@ -37,7 +38,7 @@ df = df_results.sort_values(["spectrum", "wavelength_nm"])
 
 #%% ================== 1) Last spectrum comparison =====================
 last_spec = spectra.max()
-last_spec = 1
+last_spec = 60
 df_last = df[df["spectrum"] == last_spec]
 
 plt.figure(figsize=(6, 4))
@@ -66,7 +67,7 @@ plt.tight_layout()
 plt.savefig(out_dir / "RMSE_vs_spectrum.png", dpi=300)
 plt.show()
 
-#%% ================== 3) Thickness evolution =====================
+#% ================== 3) Thickness evolution =====================
 """
 plt.figure(figsize=(6, 4))
 (
@@ -136,12 +137,35 @@ plot_df = pd.DataFrame(material_thickness, index=grouped.index)
 
 # --- build legend labels ---
 legend_labels = []
-for col in plot_df.columns:
-    if isinstance(col, tuple):
-        name, role, idx = col
-        label = f"{name} ({role}, layer {idx})"
-    else:
-        label = col
+thickness_cols = []
+for i in material_indices:
+    t_col = f"material_{i}_thickness_nm"
+    thickness_cols.append(t_col)
+
+    # extract metadata from first spectrum (assumed constant per layer)
+    row = df.iloc[0]
+
+    mat_name  = row.get(f"material_{i}_name", f"material_{i}")
+    mat_shape = row.get(f"material_{i}_shape", None)
+
+    label = mat_name
+    if mat_shape and str(mat_shape) != "nan":
+        label += f" ({mat_shape})"
+
+    # inclusion info (optional)
+    inc_name = row.get(f"inclusion_{i}_name", None)
+    if inc_name and str(inc_name) != "nan":
+        inc_shape = row.get(f"inclusion_{i}_shape", "")
+        inc_vf    = row.get(f"inclusion_{i}_volume_fraction", "")
+
+        inc_label = inc_name
+        if inc_shape and str(inc_shape) != "nan":
+            inc_label += f", {inc_shape}"
+        if inc_vf and str(inc_vf) != "nan":
+            inc_label += f", vf={inc_vf:.2f}"
+
+        label += f"\n+ {inc_label}"
+
     legend_labels.append(label)
 
 # --- plot ---
