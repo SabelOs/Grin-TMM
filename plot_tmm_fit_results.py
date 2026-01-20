@@ -9,7 +9,7 @@ from collections import defaultdict
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample6_Cu_Cu2O-CuSphere_CuO_20xObj.csv"
+fileName = "sample1_Cu_Cu2O-CuChain_CuO_50xObj_Xe.csv"
 results_base = Path(__file__).parent / fileName
 
 
@@ -38,7 +38,7 @@ df = df_results.sort_values(["spectrum", "wavelength_nm"])
 
 #%% ================== 1) Last spectrum comparison =====================
 last_spec = spectra.max()
-last_spec = 60
+last_spec = 70
 df_last = df[df["spectrum"] == last_spec]
 
 plt.figure(figsize=(6, 4))
@@ -65,6 +65,7 @@ plt.title("Fit error per spectrum")
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
 plt.savefig(out_dir / "RMSE_vs_spectrum.png", dpi=300)
+#plt.yscale('log')
 plt.show()
 
 #% ================== 3) Thickness evolution =====================
