@@ -6,10 +6,9 @@ from matplotlib.colors import TwoSlopeNorm
 from pathlib import Path
 import re
 from collections import defaultdict
-from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample1_Cu_Cu2O-CuChain_CuO_50xObj_Xe.csv"
+fileName = "sample1_Cu_Cu2O-CuSphere_CuO_50xObj_Xe_5.csv"
 results_base = Path(__file__).parent / fileName
 
 
@@ -17,6 +16,7 @@ use_pickle = True   # set False to use CSV instead
 
 # Output directory for plots
 outDirName = "plots_" + fileName[:-4]
+
 out_dir = Path(__file__).parent / outDirName
 out_dir.mkdir(exist_ok=True)
 
@@ -38,7 +38,7 @@ df = df_results.sort_values(["spectrum", "wavelength_nm"])
 
 #%% ================== 1) Last spectrum comparison =====================
 last_spec = spectra.max()
-last_spec = 70
+last_spec = 40
 df_last = df[df["spectrum"] == last_spec]
 
 plt.figure(figsize=(6, 4))
@@ -84,7 +84,7 @@ plt.tight_layout()
 plt.savefig(out_dir / "thickness_evolution.png", dpi=300)
 plt.show()
 """
-addMaterialFractions = False  # <<< USER OPTION
+addMaterialFractions = True  # <<< USER OPTION
 
 # --- find material indices automatically ---
 material_indices = sorted(

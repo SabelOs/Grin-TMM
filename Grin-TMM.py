@@ -9,8 +9,11 @@ from scipy.ndimage import uniform_filter1d
 from winspec import SpeFile
 import tmm_fast.gym_multilayerthinfilm as mltf
 from tmm_fast import coh_tmm
-from ga_thickness_optimizer import GeneticThicknessOptimizer
+from ga_thickness_optimizer_new import GeneticThicknessOptimizer
 from bruggemann_mixing import bruggeman_n
+import time
+from datetime import timedelta, datetime
+from zoneinfo import ZoneInfo
 
 #%% ================== Helper =====================
 def moving_average_same(a, n=5):
@@ -47,8 +50,7 @@ layers = [
         "thickness_init": 0.1,
         "inclusion": {
             "material": "Cu",
-            "shape": "chain",
-            "shape": "chain",
+            "shape": "sphere",
             "fraction_init": 0.0,
             "bounds": (0.0, 0.3),
         },
@@ -71,15 +73,15 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample1_Cu_Cu2O-CuChain_CuO_50xObj_Xe"
+saveName = "sample1_Cu_Cu2O-CuSphere_CuO_50xObj_Xe_6"
 #-------- GA Settings -------------
 device = "cpu"
 pop_size = 30
-generations = 70
-mutation_scale_thickness = 15
+generations = 80
+mutation_scale_thickness = 3
 mutation_scale_volume_fraction= 0.05
 elite_percentage = 0.1
-mutation_rate = 0.07
+mutation_rate = 0.05
 """
 Default Values for GA:
 mutation_scale_thickness = 1.2
@@ -217,6 +219,7 @@ def fitness_torch(d, f, target_T):
     return torch.sqrt(torch.mean((T_sim - target_T) ** 2))
 
 #%% ================= Main loop =================
+start_time = time.time()
 for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
 
     print(f"\n=== Fitting spectrum {n_spec - spec} / {spectra_fitting_range} ===")
@@ -330,6 +333,30 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
 
         records.append(row)
 
+    # ---- Timing information ----
+    now = time.time()
+    total_time_running = now - start_time
+
+    completed_specs = completed_specs = n_spec - spec
+
+    estimated_total_time = (
+        total_time_running / completed_specs
+    ) * spectra_fitting_range
+
+    time_left = max(estimated_total_time - total_time_running, 0)
+
+    elapsed_str = str(timedelta(seconds=int(total_time_running)))
+    remaining_str = str(timedelta(seconds=int(time_left)))
+
+    eta_time = datetime.now(ZoneInfo("Europe/Berlin")) + timedelta(
+        seconds=int(time_left)
+    )
+
+    print(
+        f"[TIME] Elapsed: {elapsed_str} | "
+        f"Remaining: {remaining_str} | "
+        f"ETA: {eta_time.strftime('%Y-%m-%d %H:%M:%S')}"
+    )
 
 #%% ================= Save =================
 df = pd.DataFrame(records)
