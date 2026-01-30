@@ -40,7 +40,7 @@ layers = [
         "name": "Cu",
         "matrix": "Cu",
         "shape": "sphere",
-        "thickness_init": 25.0,
+        "thickness_init": 32.0,
         "inclusion": None,
     },
     {
@@ -48,12 +48,7 @@ layers = [
         "matrix": "Cu2O",
         "shape": "sphere",
         "thickness_init": 0.1,
-        "inclusion": {
-            "material": "Cu",
-            "shape": "sphere",
-            "fraction_init": 0.0,
-            "bounds": (0.0, 0.3),
-        },
+        "inclusion": None,
     },
     {
         "name": "CuO",
@@ -66,15 +61,24 @@ layers = [
 #--------- File Settings -----------
 #SPE_file  = path + "/Sample1_BiggestGrin.SPE"
 #Lamp_file = path + "/Substrate_Xe.SPE"#"/Substrate-20xObj.SPE"
-SPE_file  = path + "/20_01_2026_Xe_lamp/Sample6-Xe-BiggestGrin.SPE"
-Lamp_file = path + "/20_01_2026_Xe_lamp/Sample6-Xe-BiggestGrin-Substrate.SPE"
+SPE_file  = path + "/Grin-3s-5_0W.SPE"
+Lamp_file = path + "/SubstrateGrin-3s-5_0W.SPE"
 
 exclude_even_spectra = True #This option is only used for the case where no automatic shutter is located at the spectrometer and there allways need to be one "flush" spectrum
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample1_Cu_Cu2O-CuSphere_CuO_50xObj_Xe_6"
+saveName = "sample8_Cu_Cu2O_CuO_3s_5_0W"
 #-------- GA Settings -------------
+device = "cpu"
+pop_size = 30
+generations = 80
+mutation_scale_thickness = 6
+mutation_scale_volume_fraction= 0.05
+elite_percentage = 0.1
+mutation_rate = 0.05
+"""
+Default Values for GA with 25nm copper film:
 device = "cpu"
 pop_size = 30
 generations = 80
@@ -82,12 +86,6 @@ mutation_scale_thickness = 3
 mutation_scale_volume_fraction= 0.05
 elite_percentage = 0.1
 mutation_rate = 0.05
-"""
-Default Values for GA:
-mutation_scale_thickness = 1.2
-mutation_scale_volume_fraction= 0.02
-elite_percentage = 0.1
-mutation_rate = 0.2
 """
 # -------- Wavelength cut -------- 
 enable_wl_cut = True 

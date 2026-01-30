@@ -8,7 +8,7 @@ import re
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample1_Cu_Cu2O-CuSphere_CuO_50xObj_Xe_5.csv"
+fileName = "sample8_Cu_Cu2O_CuO_3s_5_0W.csv"
 results_base = Path(__file__).parent / fileName
 
 
@@ -38,7 +38,7 @@ df = df_results.sort_values(["spectrum", "wavelength_nm"])
 
 #%% ================== 1) Last spectrum comparison =====================
 last_spec = spectra.max()
-last_spec = 40
+last_spec = 5
 df_last = df[df["spectrum"] == last_spec]
 
 plt.figure(figsize=(6, 4))
@@ -49,7 +49,8 @@ plt.ylabel("Transmittance")
 plt.title(f"Spectrum {last_spec}: Fit vs Experiment")
 plt.legend()
 plt.tight_layout()
-#plt.savefig(out_dir / "comparison_last_spectrum.png", dpi=300)
+savestr = "comparison_" + str(last_spec) + "_spectrum.png"
+plt.savefig(out_dir / savestr, dpi=300)
 plt.show()
 
 #%% ================== 2) RMSE vs spectrum =====================
