@@ -68,12 +68,12 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample8_Cu_Cu2O_CuO_3s_5_0W"
+saveName = "sample8_Cu_Cu2O_CuO_3s_5_0W_4"
 #-------- GA Settings -------------
 device = "cpu"
-pop_size = 30
-generations = 80
-mutation_scale_thickness = 6
+pop_size = 50
+generations = 140
+mutation_scale_thickness = 2.5
 mutation_scale_volume_fraction= 0.05
 elite_percentage = 0.1
 mutation_rate = 0.05
@@ -107,6 +107,14 @@ T_exp_all = I / I_lamp
 
 if np.any((T_exp_all < 0) | (T_exp_all > 1)):
     print("WARNING: T_exp_all contains values outside the [0, 1] interval.\n")
+    print(f"T_exp_all min = {T_exp_all.min():.3g}, max = {T_exp_all.max():.3g}\n")
+
+if np.any(T_exp_all > 1):
+    T_exp_all = T_exp_all / np.max(T_exp_all)
+    print("Corrected for values >1!\n")
+
+if np.any((T_exp_all < 0) | (T_exp_all > 1)):
+    print("WARNING: T_exp_all still has values outside [0, 1] interval.\n")
     print(f"T_exp_all min = {T_exp_all.min():.3g}, max = {T_exp_all.max():.3g}\n")
 
 if enable_wl_cut: 
