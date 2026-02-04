@@ -47,9 +47,12 @@ class GeneticThicknessOptimizer:
         x[:n_layers] = x[:n_layers].clamp(self.tmin, self.tmax)
 
         # --- Volume fraction bounds ---
-        for i in range(n_fractions):
-            fmin, fmax = self.f_bounds[i]
+        for i, (fmin, fmax) in enumerate(self.f_bounds):
             x[n_layers + i] = x[n_layers + i].clamp(fmin, fmax)
+
+            # --- Physical coupling ---
+            if x[i] < 0.1:
+                x[n_layers + i] = 0.0
         return x
 
     def initialize(self, d_init, f_init):
@@ -77,7 +80,10 @@ class GeneticThicknessOptimizer:
 
             # Volume fraction genes (each with its own bounds)
             for i, (fmin, fmax) in enumerate(self.f_bounds):
-                ind[n_layers + i] = torch.rand(1, device=self.device) * (fmax - fmin) + fmin
+                if ind[i] > 0.1:
+                    ind[n_layers + i] = torch.rand(1, device=self.device) * (fmax - fmin) + fmin
+                else:
+                    ind[n_layers + i] = fmin
 
             self.population.append(ind)
 
@@ -117,12 +123,13 @@ class GeneticThicknessOptimizer:
                     * self.mutation_scale_thickness
                 )
 
-            # Volume fraction mutations
-            if mutation_mask[n_layers:].any():
-                child[n_layers:][mutation_mask[n_layers:]] += (
-                    torch.randn(mutation_mask[n_layers:].sum(), device=self.device)
-                    * self.mutation_scale_volume_fraction
-                )
+            # Volume fraction mutations — ONLY if thickness >= 0.1
+            for i in range(n_layers):
+                if child[i] >= 0.1 and mutation_mask[n_layers + i]:
+                    child[n_layers + i] += (
+                        torch.randn((), device=self.device)
+                        * self.mutation_scale_volume_fraction
+                    )
 
             child = self._project_bounds(child)
             new_population.append(child)
@@ -154,3 +161,23 @@ class GeneticThicknessOptimizer:
 
         best = torch.argmin(self.fitness)
         return self.population[best].detach()
+    
+    def inject_elites(self, guesses):
+        """
+        guesses: list of tensors shaped (n_params,)
+        Inject guesses into the population (replacing worst individuals).
+        """
+        guesses = [
+            self._project_bounds(g.to(self.device))
+            for g in guesses
+        ]
+
+        # Evaluate current population
+        self.evaluate()
+        idx = torch.argsort(self.fitness, descending=True)
+
+        for i, g in enumerate(guesses):
+            if i >= len(idx):
+                break
+            self.population[idx[i]] = g
+

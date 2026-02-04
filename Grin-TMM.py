@@ -48,35 +48,57 @@ layers = [
         "matrix": "Cu2O",
         "shape": "sphere",
         "thickness_init": 0.1,
-        "inclusion": None,
+        "inclusion": {
+            "material": "Cu",
+            "shape": "sphere",
+            "fraction_init": 0.0,
+            "bounds": (0.0, 0.3),
+        },
     },
     {
         "name": "CuO",
         "matrix": "CuO",
         "shape": "sphere",
-        "thickness_init": 0.1,
-        "inclusion": None,
-    },
+        "thickness_init": 0.0,
+        "inclusion": {
+            "material": "Cu2O",
+            "shape": "sphere",
+            "fraction_init": 0.0,
+            "bounds": (0.0, 0.3),
+        },
+    }
 ]
+secondary_guesses = {}
+"""secondary_guesses = {
+    7: [
+        torch.tensor([0, 50, 15, 0, 0.02, 0], dtype=torch.float64),
+        torch.tensor([0, 40, 15, 0, 0.02, 0], dtype=torch.float64),
+        torch.tensor([0, 30, 15, 0, 0.02, 0], dtype=torch.float64),
+    ],
+    8: [
+        torch.tensor([0, 40, 25, 0, 0.02, 0], dtype=torch.float64),
+    ],
+}"""
+
 #--------- File Settings -----------
 #SPE_file  = path + "/Sample1_BiggestGrin.SPE"
 #Lamp_file = path + "/Substrate_Xe.SPE"#"/Substrate-20xObj.SPE"
-SPE_file  = path + "/Grin-3s-5_0W.SPE"
-Lamp_file = path + "/SubstrateGrin-3s-5_0W.SPE"
+SPE_file  = path + "/Grin-2W-120s.SPE"
+Lamp_file = path + "/Substrate.SPE"
 
 exclude_even_spectra = True #This option is only used for the case where no automatic shutter is located at the spectrometer and there allways need to be one "flush" spectrum
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample8_Cu_Cu2O_CuO_3s_5_0W_4"
+saveName = "sample9_Cu_Cu2O-Cu_Sphere-CuO-Cu2O_Sphere_120s_2_0W"
 #-------- GA Settings -------------
 device = "cpu"
-pop_size = 50
-generations = 140
-mutation_scale_thickness = 2.5
-mutation_scale_volume_fraction= 0.05
+pop_size = 100
+generations = 100
+mutation_scale_thickness = 15
+mutation_scale_volume_fraction= 0.1
 elite_percentage = 0.1
-mutation_rate = 0.05
+mutation_rate = 0.1
 """
 Default Values for GA with 25nm copper film:
 device = "cpu"
@@ -130,8 +152,9 @@ n_spec = T_exp_all.shape[0]
 
 if spectra_fitting_range == -1:
     spectra_fitting_range = n_spec
-#%% Test plotting code
 
+#%% Test plotting code
+"""
 plt.figure()
 plt.plot(wl_nm,I[69,:],color="red")
 plt.plot(wl_nm, I_lamp)
@@ -143,6 +166,7 @@ print("Transmission Shape:" + str(T_exp_all[0].shape))
 #%%
 plt.figure()
 plt.plot(wl_nm,I[69,:]/I_lamp,color="red")
+"""
 #%% ================= Refractive indices =================
 N_np = mltf.get_N(
     list(materials.values()),
@@ -226,6 +250,8 @@ def fitness_torch(d, f, target_T):
 
 #%% ================= Main loop =================
 start_time = time.time()
+prev_rmse = None
+
 for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
 
     print(f"\n=== Fitting spectrum {n_spec - spec} / {spectra_fitting_range} ===")
@@ -252,7 +278,14 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
     )
 
     ga.initialize(init_d, init_f)
+
+    # --- inject secondary guesses if provided ---
+    if spec in secondary_guesses:
+        ga.inject_elites(secondary_guesses[spec])
+        print("Injected Spectrum\n")
+
     best = ga.run(generations)
+
 
     d_best = best[:len(layers)]
     f_best = best[len(layers):]
@@ -260,6 +293,48 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
     #set the best fitting options from the last spectrum as init guess for next one
     init_d = d_best
     init_f = f_best
+
+    #Mutation Annealing in case of RMSE Jump!
+    rmse = fitness_torch(d_best, f_best, target_T).item()
+
+    rmse_jump = False
+    if prev_rmse is not None:
+        if rmse > 1.5 * prev_rmse:
+            rmse_jump = True
+
+    prev_rmse = rmse
+
+    if rmse_jump:
+        print("⚠ RMSE jump detected — re-running GA with boosted mutation")
+
+        ga = GeneticThicknessOptimizer(
+            fitness_fn=fitness_ga,
+            n_params=2 * len(layers),
+            bounds_thickness=(1e-3, 300.0),
+            bounds_fraction=fraction_bounds,
+            population_size=pop_size,
+            mutation_rate=mutation_rate * 3,
+            elite_fraction=elite_percentage,
+            device=device,
+            mutation_scale_volume_fraction=mutation_scale_volume_fraction * 2,
+            mutation_scale_thickness=mutation_scale_thickness * 5,
+        )
+
+        ga.initialize(init_d, init_f)
+
+        # inject secondary guesses if present
+        if spec in secondary_guesses:
+            ga.inject_elites(secondary_guesses[spec])
+
+        best = ga.run(int(generations * 0.5))
+        
+        d_best = best[:len(layers)]
+        f_best = best[len(layers):]
+
+        #set the best fitting options from the last spectrum as init guess for next one
+        init_d = d_best
+        init_f = f_best
+
 
     #Compute the final optimization once (to safe)
     with torch.no_grad():

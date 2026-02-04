@@ -8,7 +8,7 @@ import re
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample8_Cu_Cu2O_CuO_3s_5_0W_4.csv"
+fileName = "sample9_Cu_Cu2O-Cu_Sphere-CuO-Cu2O_Sphere_120s_2_0W.csv"
 results_base = Path(__file__).parent / fileName
 
 
@@ -36,22 +36,28 @@ n_wl = wavelengths.size
 # Sort to be safe
 df = df_results.sort_values(["spectrum", "wavelength_nm"])
 
-#%% ================== 1) Last spectrum comparison =====================
-last_spec = spectra.max()
-last_spec = 5
-df_last = df[df["spectrum"] == last_spec]
+#%% ================== 1) Spectrum comparison every 5th =====================
 
-plt.figure(figsize=(6, 4))
-plt.plot(df_last["wavelength_nm"], df_last["T_exp"], "k", label="Measured")
-plt.plot(df_last["wavelength_nm"], df_last["T_fit"], "r--", label="TMM fit")
-plt.xlabel("Wavelength (nm)")
-plt.ylabel("Transmittance")
-plt.title(f"Spectrum {last_spec}: Fit vs Experiment")
-plt.legend()
-plt.tight_layout()
-savestr = "comparison_" + str(last_spec) + "_spectrum.png"
-plt.savefig(out_dir / savestr, dpi=300)
-plt.show()
+spectra_ids = sorted(df["spectrum"].unique())
+
+for spec in spectra_ids[::5]:
+    df_spec = df[df["spectrum"] == spec]
+
+    plt.figure(figsize=(6, 4))
+    plt.plot(df_spec["wavelength_nm"], df_spec["T_exp"], "k", label="Measured")
+    plt.plot(df_spec["wavelength_nm"], df_spec["T_fit"], "r--", label="TMM fit")
+
+    plt.xlabel("Wavelength (nm)")
+    plt.ylabel("Transmittance")
+    plt.title(f"Spectrum {spec}: Fit vs Experiment")
+    plt.legend()
+    plt.tight_layout()
+
+    savestr = f"comparison_{spec}_spectrum.png"
+    plt.savefig(out_dir / savestr, dpi=300)
+    plt.show()
+    plt.close()  # IMPORTANT: prevents memory buildup
+
 
 #%% ================== 2) RMSE vs spectrum =====================
 plt.figure(figsize=(6, 4))
@@ -85,7 +91,7 @@ plt.tight_layout()
 plt.savefig(out_dir / "thickness_evolution.png", dpi=300)
 plt.show()
 """
-addMaterialFractions = True  # <<< USER OPTION
+addMaterialFractions = False  # <<< USER OPTION
 
 # --- find material indices automatically ---
 material_indices = sorted(
@@ -137,38 +143,53 @@ for spectrum, row in grouped.iterrows():
 # --- build dataframe for plotting ---
 plot_df = pd.DataFrame(material_thickness, index=grouped.index)
 
-# --- build legend labels ---
+# --- reorder columns: matrix first, inclusions last ---
+matrix_cols = []
+inclusion_cols = []
+
+for col in plot_df.columns:
+    if isinstance(col, tuple) and col[1] == "inclusion":
+        inclusion_cols.append(col)
+    else:
+        matrix_cols.append(col)
+
+ordered_cols = matrix_cols + inclusion_cols
+plot_df = plot_df[ordered_cols]
+
+
 legend_labels = []
-thickness_cols = []
-for i in material_indices:
-    t_col = f"material_{i}_thickness_nm"
-    thickness_cols.append(t_col)
 
-    # extract metadata from first spectrum (assumed constant per layer)
-    row = df.iloc[0]
+row0 = df.iloc[0]  # metadata source
 
-    mat_name  = row.get(f"material_{i}_name", f"material_{i}")
-    mat_shape = row.get(f"material_{i}_shape", None)
+for col in plot_df.columns:
 
-    label = mat_name
-    if mat_shape and str(mat_shape) != "nan":
-        label += f" ({mat_shape})"
+    # merged case: col is just material name
+    if isinstance(col, str):
+        label = col
+        legend_labels.append(label)
+        continue
 
-    # inclusion info (optional)
-    inc_name = row.get(f"inclusion_{i}_name", None)
-    if inc_name and str(inc_name) != "nan":
-        inc_shape = row.get(f"inclusion_{i}_shape", "")
-        inc_vf    = row.get(f"inclusion_{i}_volume_fraction", "")
+    # unmerged case: col = (name, role, layer_index)
+    name, role, i = col
 
-        inc_label = inc_name
-        if inc_shape and str(inc_shape) != "nan":
-            inc_label += f", {inc_shape}"
-        if inc_vf and str(inc_vf) != "nan":
-            inc_label += f", vf={inc_vf:.2f}"
+    if role == "matrix":
+        shape = row0.get(f"material_{i}_shape", None)
+        label = name
+        if shape and str(shape) != "nan":
+            label += f" ({shape})"
 
-        label += f"\n+ {inc_label}"
+    elif role == "inclusion":
+        shape = row0.get(f"inclusion_{i}_shape", None)
+        vf    = row0.get(f"inclusion_{i}_volume_fraction", None)
+
+        label = f"+ {name}"
+        if shape and str(shape) != "nan":
+            label += f" ({shape})"
+        if vf is not None and not pd.isna(vf):
+            label += f", vf={vf:.2f}"
 
     legend_labels.append(label)
+
 
 # --- plot ---
 plt.figure(figsize=(6, 4))

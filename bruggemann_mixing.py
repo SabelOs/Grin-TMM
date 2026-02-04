@@ -84,6 +84,11 @@ def bruggeman_n(
     """
     Returns effective refractive index
     """
+
+    # --- Fast path: no inclusions anywhere ---
+    if torch.all(f1.abs() < 1e-6):
+        return n2
+
     eps1 = n1 ** 2
     eps2 = n2 ** 2
 
@@ -94,3 +99,4 @@ def bruggeman_n(
     )
 
     return torch.sqrt(eps_eff)
+
