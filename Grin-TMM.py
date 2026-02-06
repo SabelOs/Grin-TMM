@@ -60,12 +60,7 @@ layers = [
         "matrix": "CuO",
         "shape": "sphere",
         "thickness_init": 0.0,
-        "inclusion": {
-            "material": "Cu2O",
-            "shape": "sphere",
-            "fraction_init": 0.0,
-            "bounds": (0.0, 0.3),
-        },
+        "inclusion": None,
     }
 ]
 secondary_guesses = {}
@@ -90,15 +85,25 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample9_Cu_Cu2O-Cu_Sphere-CuO-Cu2O_Sphere_120s_2_0W"
+saveName = "GA_Tuning_2_sample9_Cu_Cu2O-Cu_Sphere-CuO-Cu2O_Sphere_120s_2_0W"
+
 #-------- GA Settings -------------
 device = "cpu"
-pop_size = 100
-generations = 100
-mutation_scale_thickness = 15
-mutation_scale_volume_fraction= 0.1
+pop_size = 150
+generations = 300
+mutation_scale_thickness = 5
+mutation_scale_volume_fraction= 0.05
 elite_percentage = 0.1
 mutation_rate = 0.1
+crossover_fraction = 0.8
+
+
+stall_generations = 40
+stall_increase_mutation_factor = 2.0
+stall_increase_crossover_fraction = 0.8
+
+RMSE_convergence_threshold = 0.01
+
 """
 Default Values for GA with 25nm copper film:
 device = "cpu"
@@ -269,12 +274,17 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
         n_params=2 * len(layers),
         bounds_thickness=(1e-3, 300.0),
         bounds_fraction=fraction_bounds,
-        population_size = pop_size,
+        population_size=pop_size,
         mutation_rate=mutation_rate,
         elite_fraction=elite_percentage,
         device=device,
-        mutation_scale_volume_fraction = mutation_scale_volume_fraction,
-        mutation_scale_thickness = mutation_scale_thickness
+        mutation_scale_volume_fraction=mutation_scale_volume_fraction,
+        mutation_scale_thickness=mutation_scale_thickness,
+        crossover_fraction=crossover_fraction,
+        stall_generations=stall_generations,
+        stall_increase_mutation_factor=stall_increase_mutation_factor,
+        stall_increase_crossover_fraction=stall_increase_crossover_fraction,
+        RMSE_convergence_threshold=RMSE_convergence_threshold,
     )
 
     ga.initialize(init_d, init_f)
@@ -313,11 +323,16 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
             bounds_thickness=(1e-3, 300.0),
             bounds_fraction=fraction_bounds,
             population_size=pop_size,
-            mutation_rate=mutation_rate * 3,
+            mutation_rate=mutation_rate,
             elite_fraction=elite_percentage,
             device=device,
-            mutation_scale_volume_fraction=mutation_scale_volume_fraction * 2,
-            mutation_scale_thickness=mutation_scale_thickness * 5,
+            mutation_scale_volume_fraction=mutation_scale_volume_fraction,
+            mutation_scale_thickness=mutation_scale_thickness,
+            crossover_fraction=crossover_fraction,
+            stall_generations=stall_generations,
+            stall_increase_mutation_factor=stall_increase_mutation_factor,
+            stall_increase_crossover_fraction=stall_increase_crossover_fraction,
+            RMSE_convergence_threshold=RMSE_convergence_threshold,
         )
 
         ga.initialize(init_d, init_f)

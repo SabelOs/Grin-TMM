@@ -19,17 +19,36 @@ class GeneticThicknessOptimizer:
         device="cpu",
         mutation_scale_volume_fraction = 0.02,
         mutation_scale_thickness = 1,
+        crossover_fraction = 0.8,
+        stall_generations=20,
+        stall_increase_mutation_factor=2,
+        stall_increase_crossover_fraction=2,
+        RMSE_convergence_threshold=0.01,
     ):
         self.fitness_fn = fitness_fn
         self.n_params = n_params
         self.tmin, self.tmax = bounds_thickness
         self.f_bounds = bounds_fraction
         self.population_size = population_size
-        self.mutation_rate = mutation_rate
-        self.mutation_scale_volume_fraction = mutation_scale_volume_fraction
-        self.elite_fraction = elite_fraction
         self.device = device
+
+        self.mutation_rate = mutation_rate
+        self.base_mutation_rate = mutation_rate
+
+        self.crossover_fraction = crossover_fraction
+        self.base_crossover_fraction = crossover_fraction
+
+        self.elite_fraction = elite_fraction
+
+        self.stall_generations = stall_generations
+        self.stall_increase_mutation_factor = stall_increase_mutation_factor
+        self.stall_increase_crossover_fraction = stall_increase_crossover_fraction
+
+        self.RMSE_convergence_threshold = RMSE_convergence_threshold
+
+        self.mutation_scale_volume_fraction = mutation_scale_volume_fraction
         self.mutation_scale_thickness = mutation_scale_thickness
+        self.boosted = False
         #define thickness and volume fraction bounds
 
     
@@ -107,14 +126,45 @@ class GeneticThicknessOptimizer:
         elite_stack = torch.stack(elites)  # shape: (n_elite, n_params)
 
         while len(new_population) < self.population_size:
-            # --- Gene-wise recombination from ALL elites ---
-            parent_indices = torch.randint(
-                0, n_elite, (self.n_params,), device=self.device
-            )
-            child = elite_stack[parent_indices, torch.arange(self.n_params)].clone()
+            # --- Select primary elite parent ---
+            primary_idx = torch.randint(0, n_elite, (), device=self.device)
+            child = elite_stack[primary_idx].clone()
+
+            # --- Gene-wise crossover ---
+            # --- effective crossover fraction ---
+            if self.boosted:
+                crossover_fraction_eff = min(
+                    self.base_crossover_fraction * self.stall_increase_crossover_fraction,
+                    1.0,
+                )
+            else:
+                crossover_fraction_eff = self.base_crossover_fraction
+
+            crossover_rolls = torch.rand(self.n_params, device=self.device)
+            crossover_mask = crossover_rolls > crossover_fraction_eff
+
+            if crossover_mask.any():
+                secondary_indices = torch.randint(
+                    0, n_elite, (crossover_mask.sum(),), device=self.device
+                )
+                gene_indices = torch.nonzero(crossover_mask, as_tuple=False).squeeze(1)
+
+                child[gene_indices] = elite_stack[
+                    secondary_indices, gene_indices
+                ]
 
             # --- Gene-wise mutation ---
-            mutation_mask = torch.rand(self.n_params, device=self.device) < self.mutation_rate
+            # --- effective mutation rate ---
+            if self.boosted:
+                mutation_rate_eff = min(
+                    self.base_mutation_rate * self.stall_increase_mutation_factor,
+                    1.0,
+                )
+            else:
+                mutation_rate_eff = self.base_mutation_rate
+
+            mutation_mask = torch.rand(self.n_params, device=self.device) < mutation_rate_eff
+
 
             # Thickness mutations
             if mutation_mask[:n_layers].any():
@@ -139,14 +189,55 @@ class GeneticThicknessOptimizer:
 
 
     def run(self, generations):
+        best_rmse = float("inf")
+        stall_counter = 0
+
         for g in range(generations):
             self.step()
-            
-            if g == max(range(generations)):
-                #Print the info of the best species
-                best = torch.argmin(self.fitness)
-                best_ind = self.population[best]
 
+            best = torch.argmin(self.fitness)
+            current_rmse = self.fitness[best].item()
+            best_ind = self.population[best]
+
+            # --- RMSE convergence stopping ---
+            if current_rmse <= self.RMSE_convergence_threshold:
+                print(
+                    f"✓ RMSE threshold reached at gen {g:03d} "
+                    f"(RMSE={current_rmse:.4f})"
+                )
+                self.boosted = False
+                return best_ind.detach()
+
+            # --- stall detection ---
+            if abs(current_rmse - best_rmse) < 1e-12:
+                stall_counter += 1
+            else:
+                stall_counter = 0
+                best_rmse = current_rmse
+                self.boosted = False  # ← clean reset on improvement
+
+            # --- mid-stall boost ---
+            if (
+                stall_counter >= self.stall_generations // 2
+                and not self.boosted
+            ):
+                self.boosted = True
+                print(
+                    f"⚠ Stall detected at gen {g:03d} — "
+                    f"enabling boosted mutation & crossover"
+                )
+
+            # --- full stall stop ---
+            if stall_counter >= self.stall_generations:
+                print(
+                    f"⏹ GA stalled for {self.stall_generations} generations "
+                    f"(best RMSE={best_rmse:.4f})"
+                )
+                self.boosted = False
+                return best_ind.detach()
+
+            # --- final-generation print ---
+            if g == generations - 1:
                 n_layers = len(self.f_bounds)
                 d_vals = best_ind[:n_layers]
                 f_vals = best_ind[n_layers:]
@@ -155,12 +246,14 @@ class GeneticThicknessOptimizer:
                 f_str = ", ".join([f"{f:.4f}" for f in f_vals])
 
                 print(
-                    f"GA Gen {g:03d} | RMSE={self.fitness[best]:.4} | "
+                    f"GA Gen {g:03d} | RMSE={current_rmse:.4f} | "
                     f"d = [{d_str}] | f = [{f_str}]"
                 )
 
         best = torch.argmin(self.fitness)
+        self.boosted = False
         return self.population[best].detach()
+
     
     def inject_elites(self, guesses):
         """
