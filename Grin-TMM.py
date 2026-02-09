@@ -85,13 +85,13 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "GA_Tuning_2_sample9_Cu_Cu2O-Cu_Sphere-CuO-Cu2O_Sphere_120s_2_0W"
+saveName = "GA_Tuning_5_sample9_Cu_Cu2O-Cu_Sphere-CuO-Cu2O_Sphere_120s_2_0W"
 
 #-------- GA Settings -------------
 device = "cpu"
 pop_size = 150
 generations = 300
-mutation_scale_thickness = 5
+mutation_scale_thickness = 8
 mutation_scale_volume_fraction= 0.05
 elite_percentage = 0.1
 mutation_rate = 0.1

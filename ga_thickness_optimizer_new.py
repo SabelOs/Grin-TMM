@@ -203,9 +203,10 @@ class GeneticThicknessOptimizer:
             if current_rmse <= self.RMSE_convergence_threshold:
                 print(
                     f"✓ RMSE threshold reached at gen {g:03d} "
-                    f"(RMSE={current_rmse:.4f})"
                 )
                 self.boosted = False
+                n_layers = len(self.f_bounds)
+                self.print_fitting_results(g, best_ind[:n_layers], best_ind[n_layers:],current_rmse)
                 return best_ind.detach()
 
             # --- stall detection ---
@@ -231,13 +232,15 @@ class GeneticThicknessOptimizer:
             if stall_counter >= self.stall_generations:
                 print(
                     f"⏹ GA stalled for {self.stall_generations} generations "
-                    f"(best RMSE={best_rmse:.4f})"
                 )
                 self.boosted = False
+                n_layers = len(self.f_bounds)
+                self.print_fitting_results(g, best_ind[:n_layers], best_ind[n_layers:],current_rmse)
                 return best_ind.detach()
 
             # --- final-generation print ---
             if g == generations - 1:
+                """
                 n_layers = len(self.f_bounds)
                 d_vals = best_ind[:n_layers]
                 f_vals = best_ind[n_layers:]
@@ -248,7 +251,9 @@ class GeneticThicknessOptimizer:
                 print(
                     f"GA Gen {g:03d} | RMSE={current_rmse:.4f} | "
                     f"d = [{d_str}] | f = [{f_str}]"
-                )
+                )"""
+                n_layers = len(self.f_bounds)
+                self.print_fitting_results(g, best_ind[:n_layers], best_ind[n_layers:],current_rmse)
 
         best = torch.argmin(self.fitness)
         self.boosted = False
@@ -274,3 +279,11 @@ class GeneticThicknessOptimizer:
                 break
             self.population[idx[i]] = g
 
+    def print_fitting_results(self, g, d_vals, f_vals, current_rmse):
+        d_str = ", ".join([f"{d:.2f}" for d in d_vals])
+        f_str = ", ".join([f"{f:.4f}" for f in f_vals])
+
+        print(
+            f"GA Gen {g:03d} | RMSE={current_rmse:.4f} | "
+            f"d = [{d_str}] | f = [{f_str}]"
+            )
