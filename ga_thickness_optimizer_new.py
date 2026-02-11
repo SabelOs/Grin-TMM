@@ -175,7 +175,7 @@ class GeneticThicknessOptimizer:
 
             # Volume fraction mutations — ONLY if thickness >= 0.1
             for i in range(n_layers):
-                if child[i] >= 0.1 and mutation_mask[n_layers + i]:
+                if child[i] >= 0.1 and mutation_mask[i]: #mutation individually mutation_mask[n_layers + i]:
                     child[n_layers + i] += (
                         torch.randn((), device=self.device)
                         * self.mutation_scale_volume_fraction

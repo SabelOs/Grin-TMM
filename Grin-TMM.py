@@ -48,7 +48,12 @@ layers = [
         "matrix": "Cu2O",
         "shape": "sphere",
         "thickness_init": 0.1,
-        "inclusion": None,
+        "inclusion": {
+            "material": "Cu",
+            "shape": "sphere",
+            "fraction_init": 0.0,
+            "bounds": (0.0, 1.0),
+        },
     },
     {
         "name": "CuO",
@@ -80,11 +85,11 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "NewFiber_sample9_Cu_Cu2O-Cu_Sphere-CuO-Cu2O_Sphere_120s_2_0W_3"
+saveName = "NewFiber_sample9_Cu_Cu2O-Cu_Sphere_CuO-120s_2_0W"
 
 #-------- GA Settings -------------
 device = "cpu"
-pop_size = 50
+pop_size = 100
 generations = 300
 mutation_scale_thickness = 2
 mutation_scale_volume_fraction= 0.08
