@@ -48,12 +48,7 @@ layers = [
         "matrix": "Cu2O",
         "shape": "sphere",
         "thickness_init": 0.1,
-        "inclusion": {
-            "material": "Cu",
-            "shape": "sphere",
-            "fraction_init": 0.0,
-            "bounds": (0.0, 0.3),
-        },
+        "inclusion": None,
     },
     {
         "name": "CuO",
@@ -79,20 +74,20 @@ secondary_guesses = {}
 #SPE_file  = path + "/Sample1_BiggestGrin.SPE"
 #Lamp_file = path + "/Substrate_Xe.SPE"#"/Substrate-20xObj.SPE"
 SPE_file  = path + "/Grin-2W-120s.SPE"
-Lamp_file = path + "/Substrate.SPE"
+Lamp_file = path + "/Substrate-Grin-2W-120s.SPE"
 
 exclude_even_spectra = True #This option is only used for the case where no automatic shutter is located at the spectrometer and there allways need to be one "flush" spectrum
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "GA_Tuning_5_sample9_Cu_Cu2O-Cu_Sphere-CuO-Cu2O_Sphere_120s_2_0W"
+saveName = "NewFiber_sample9_Cu_Cu2O-Cu_Sphere-CuO-Cu2O_Sphere_120s_2_0W_3"
 
 #-------- GA Settings -------------
 device = "cpu"
-pop_size = 150
+pop_size = 50
 generations = 300
-mutation_scale_thickness = 8
-mutation_scale_volume_fraction= 0.05
+mutation_scale_thickness = 2
+mutation_scale_volume_fraction= 0.08
 elite_percentage = 0.1
 mutation_rate = 0.1
 crossover_fraction = 0.8
