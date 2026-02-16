@@ -27,7 +27,13 @@ class GeneticThicknessOptimizer:
     ):
         self.fitness_fn = fitness_fn
         self.n_params = n_params
-        self.tmin, self.tmax = bounds_thickness
+        
+        if isinstance(bounds_thickness[0], (list, tuple)):
+            self.thickness_bounds = bounds_thickness
+        else:
+            self.thickness_bounds = None
+            self.tmin, self.tmax = bounds_thickness
+        
         self.f_bounds = bounds_fraction
         self.population_size = population_size
         self.device = device
@@ -63,7 +69,13 @@ class GeneticThicknessOptimizer:
         n_fractions = len(self.f_bounds)  # number of volume-fraction genes
         
         # --- Thickness bounds ---
-        x[:n_layers] = x[:n_layers].clamp(self.tmin, self.tmax)
+        for i in range(n_layers):
+            if self.thickness_bounds is not None:
+                tmin, tmax = self.thickness_bounds[i]
+            else:
+                tmin, tmax = self.tmin, self.tmax
+
+            x[i] = x[i].clamp(tmin, tmax)
 
         # --- Volume fraction bounds ---
         for i, (fmin, fmax) in enumerate(self.f_bounds):
@@ -93,9 +105,13 @@ class GeneticThicknessOptimizer:
             ind = torch.empty(self.n_params, device=self.device)
 
             # Thickness genes
-            ind[:n_layers] = torch.rand(n_layers, device=self.device) * (
-                self.tmax - self.tmin
-            ) + self.tmin
+            for i in range(n_layers):
+                if self.thickness_bounds is not None:
+                    tmin, tmax = self.thickness_bounds[i]
+                else:
+                    tmin, tmax = self.tmin, self.tmax
+
+                ind[i] = torch.rand((), device=self.device) * (tmax - tmin) + tmin
 
             # Volume fraction genes (each with its own bounds)
             for i, (fmin, fmax) in enumerate(self.f_bounds):

@@ -8,7 +8,7 @@ import re
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "NewFiber_sample9_Cu_Cu2O-Cu_ChainCuO-120s_2_0W.csv"
+fileName = "NewFiber_sample9_Cu_Cu2O-Cu_Sphere_Cu2O_CuO-120s_2_0W_3.csv"
 results_base = Path(__file__).parent / fileName
 
 
@@ -138,7 +138,7 @@ for spectrum, row in grouped.iterrows():
             material_thickness[name].append(merged[name])
     else:
         for key, val in spectrum_contrib.items():
-            material_thickness[key].append(val)
+            material_thickness[key].append(spectrum_contrib.get(key, 0.0))
 
 # --- build dataframe for plotting ---
 plot_df = pd.DataFrame(material_thickness, index=grouped.index)

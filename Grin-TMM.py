@@ -41,6 +41,7 @@ layers = [
         "matrix": "Cu",
         "shape": "sphere",
         "thickness_init": 32.0,
+        "thickness_bounds": (0.0, 80.0),
         "inclusion": None,
     },
     {
@@ -48,6 +49,7 @@ layers = [
         "matrix": "Cu2O",
         "shape": "sphere",
         "thickness_init": 0.1,
+        "thickness_bounds": (0.0, 10.0),  # ← default BEFORE override
         "inclusion": {
             "material": "Cu",
             "shape": "sphere",
@@ -56,24 +58,45 @@ layers = [
         },
     },
     {
+        "name": "Cu2O_2",
+        "matrix": "Cu2O",
+        "shape": "sphere",
+        "thickness_init": 0.0,
+        "thickness_bounds": (0.0, 20.0),
+        "inclusion": None,
+    },
+    {
         "name": "CuO",
         "matrix": "CuO",
         "shape": "sphere",
         "thickness_init": 0.0,
+        "thickness_bounds": (0.0, 20.0),
         "inclusion": None,
     }
 ]
+
+
+#Place guesses for specific spectrum here: NOTE the number is the n_spec - spec, i.e. the one that is printed in the console like this: "=== Fitting spectrum x / N ==="
 secondary_guesses = {}
-"""secondary_guesses = {
-    7: [
-        torch.tensor([0, 50, 15, 0, 0.02, 0], dtype=torch.float64),
-        torch.tensor([0, 40, 15, 0, 0.02, 0], dtype=torch.float64),
-        torch.tensor([0, 30, 15, 0, 0.02, 0], dtype=torch.float64),
-    ],
-    8: [
-        torch.tensor([0, 40, 25, 0, 0.02, 0], dtype=torch.float64),
-    ],
-}"""
+secondary_guesses = {
+    19: [
+        torch.tensor([27.80, 39.36, 4.11, 3.02, 0.0, 0.0, 0.0, 0.0], dtype=torch.float64),
+        torch.tensor([27.80, 39.36, 5, 3.02, 0.0, 0.0, 0.0, 0.0], dtype=torch.float64),
+        torch.tensor([25, 39.36, 0, 3.02, 0.0, 0.0, 0.0, 0.0], dtype=torch.float64),
+        torch.tensor([29.80, 39.36, 4, 3.02, 0.0, 0.0, 0.0, 0.0], dtype=torch.float64),
+    ]
+}
+
+# --- Spectrum-dependent layer bound overrides ---
+# key = (n_spec - spec), same convention as secondary_guesses
+layer_bounds_overrides = {
+    19: {  # applies from spectrum 17 and onward
+        "Cu2O": (15.0, 100.0),
+    },
+    26: {
+        "Cu2O": (0.0, 100.0),
+    }
+}
 
 #--------- File Settings -----------
 #SPE_file  = path + "/Sample1_BiggestGrin.SPE"
@@ -85,18 +108,18 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "NewFiber_sample9_Cu_Cu2O-Cu_Sphere_CuO-120s_2_0W"
+saveName = "NewFiber_sample9_Cu_Cu2O-Cu_Sphere_Cu2O_CuO-120s_2_0W_3"
 
 #-------- GA Settings -------------
 device = "cpu"
-pop_size = 100
+pop_size = 50
 generations = 300
 mutation_scale_thickness = 2
 mutation_scale_volume_fraction= 0.08
 elite_percentage = 0.1
 mutation_rate = 0.1
 crossover_fraction = 0.8
-
+redo_on_rmse_jump = False
 
 stall_generations = 40
 stall_increase_mutation_factor = 2.0
@@ -262,7 +285,22 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
     print(f"\n=== Fitting spectrum {n_spec - spec} / {spectra_fitting_range} ===")
     
     target_T = torch.tensor(T_exp_all[spec], dtype=torch.float64, device=device)
+    
+    # --- Resolve active thickness bounds for this spectrum ---
+    spec_idx = n_spec - spec
 
+    thickness_bounds = []
+    for layer in layers:
+        # start with default
+        tb = layer.get("thickness_bounds", (1e-3, 300.0))
+
+        # apply overrides if active
+        for k, overrides in layer_bounds_overrides.items():
+            if spec_idx >= k and layer["name"] in overrides:
+                tb = overrides[layer["name"]]
+
+        thickness_bounds.append(tb)
+    
     def fitness_ga(x):
         with torch.no_grad():
             d = x[:len(layers)]
@@ -272,7 +310,7 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
     ga = GeneticThicknessOptimizer(
         fitness_fn=fitness_ga,
         n_params=2 * len(layers),
-        bounds_thickness=(1e-3, 300.0),
+        bounds_thickness=thickness_bounds,
         bounds_fraction=fraction_bounds,
         population_size=pop_size,
         mutation_rate=mutation_rate,
@@ -290,8 +328,8 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
     ga.initialize(init_d, init_f)
 
     # --- inject secondary guesses if provided ---
-    if spec in secondary_guesses:
-        ga.inject_elites(secondary_guesses[spec])
+    if (n_spec - spec) in secondary_guesses:
+        ga.inject_elites(secondary_guesses[n_spec - spec])
         print("Injected Spectrum\n")
 
     best = ga.run(generations)
@@ -314,7 +352,7 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
 
     prev_rmse = rmse
 
-    if rmse_jump:
+    if rmse_jump and redo_on_rmse_jump:
         print("⚠ RMSE jump detected — re-running GA with boosted mutation")
 
         ga = GeneticThicknessOptimizer(
