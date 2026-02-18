@@ -8,7 +8,7 @@ import re
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "NewFiber_sample9_Cu_Cu2O-Cu_Sphere_Cu2O_CuO-120s_2_0W_3.csv"
+fileName = "sample9_Cu_Cu2O-Vac_Shere_CuO-Vac_Sphere-120s_2_0W.csv"
 results_base = Path(__file__).parent / fileName
 
 

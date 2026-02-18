@@ -16,7 +16,7 @@ dtype = torch.complex128
 # -------- Paths --------
 base_path = Path(__file__).parent
 pathCu   = base_path / "OpticalConstants/nk_Cu.txt"
-pathCu2O = base_path / "OpticalConstants/nk_Cu2O.txt"
+pathCu2O = base_path / "OpticalConstants/nk_Vacuum.txt"
 
 # -------- Wavelength range --------
 wl_min = 400.0
@@ -30,7 +30,7 @@ d_eff_nm = 25.0
 f_Cu2O_list = np.linspace(0.0, 1, 20)
 
 # -------- Geometry --------
-shape_Cu   = "chain"   # metallic connectivity
+shape_Cu   = "sphere"   # metallic connectivity
 shape_Cu2O = "sphere"
 
 # -------- Angle --------
@@ -119,4 +119,4 @@ fig.tight_layout()
 plt.show()
 
 
- # %%
+3 # %%

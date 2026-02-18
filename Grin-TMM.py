@@ -28,6 +28,7 @@ materials = {
     "Cu":   path + "/OpticalConstants/nk_Cu.txt",
     "Cu2O": path + "/OpticalConstants/nk_Cu2O.txt",
     "CuO":  path + "/OpticalConstants/nk_CuO.txt",
+    "Vacuum": path + "/OpticalConstants/nk_Vacuum.txt",
 }
 """{
             "material": "Cu2O",
@@ -48,21 +49,8 @@ layers = [
         "name": "Cu2O",
         "matrix": "Cu2O",
         "shape": "sphere",
-        "thickness_init": 0.1,
-        "thickness_bounds": (0.0, 10.0),  # ← default BEFORE override
-        "inclusion": {
-            "material": "Cu",
-            "shape": "sphere",
-            "fraction_init": 0.0,
-            "bounds": (0.0, 1.0),
-        },
-    },
-    {
-        "name": "Cu2O_2",
-        "matrix": "Cu2O",
-        "shape": "sphere",
         "thickness_init": 0.0,
-        "thickness_bounds": (0.0, 20.0),
+        "thickness_bounds": (0.0, 2.0),  # ← default BEFORE override
         "inclusion": None,
     },
     {
@@ -70,7 +58,7 @@ layers = [
         "matrix": "CuO",
         "shape": "sphere",
         "thickness_init": 0.0,
-        "thickness_bounds": (0.0, 20.0),
+        "thickness_bounds": (0.0, 2.0),
         "inclusion": None,
     }
 ]
@@ -78,24 +66,32 @@ layers = [
 
 #Place guesses for specific spectrum here: NOTE the number is the n_spec - spec, i.e. the one that is printed in the console like this: "=== Fitting spectrum x / N ==="
 secondary_guesses = {}
-secondary_guesses = {
+"""secondary_guesses = {
     19: [
         torch.tensor([27.80, 39.36, 4.11, 3.02, 0.0, 0.0, 0.0, 0.0], dtype=torch.float64),
         torch.tensor([27.80, 39.36, 5, 3.02, 0.0, 0.0, 0.0, 0.0], dtype=torch.float64),
         torch.tensor([25, 39.36, 0, 3.02, 0.0, 0.0, 0.0, 0.0], dtype=torch.float64),
         torch.tensor([29.80, 39.36, 4, 3.02, 0.0, 0.0, 0.0, 0.0], dtype=torch.float64),
     ]
-}
+}"""
 
 # --- Spectrum-dependent layer bound overrides ---
 # key = (n_spec - spec), same convention as secondary_guesses
+
+layer_bounds_overrides = {}
 layer_bounds_overrides = {
-    19: {  # applies from spectrum 17 and onward
-        "Cu2O": (15.0, 100.0),
+    1: {
+        "Cu2O": (0.0, 2.0),
+        "CuO": (0.0, 2.0)
     },
-    26: {
-        "Cu2O": (0.0, 100.0),
-    }
+    8: {
+        "Cu2O": (0.0, 10.0),
+        "CuO": (0.0, 10.0),
+    },
+    17: {  # applies from spectrum 17 and onward
+        "Cu2O": (0.0, 120.0),
+        "CuO": (0.0, 25.0),
+    },
 }
 
 #--------- File Settings -----------
@@ -108,12 +104,12 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "NewFiber_sample9_Cu_Cu2O-Cu_Sphere_Cu2O_CuO-120s_2_0W_3"
+saveName = "sample9_Cu_Cu2O_CuOe-120s_2_0W"
 
 #-------- GA Settings -------------
 device = "cpu"
-pop_size = 50
-generations = 300
+pop_size = 100
+generations = 500
 mutation_scale_thickness = 2
 mutation_scale_volume_fraction= 0.08
 elite_percentage = 0.1
@@ -121,8 +117,8 @@ mutation_rate = 0.1
 crossover_fraction = 0.8
 redo_on_rmse_jump = False
 
-stall_generations = 40
-stall_increase_mutation_factor = 2.0
+stall_generations = 70
+stall_increase_mutation_factor = 5.0
 stall_increase_crossover_fraction = 0.8
 
 RMSE_convergence_threshold = 0.01
@@ -139,7 +135,7 @@ mutation_rate = 0.05
 """
 # -------- Wavelength cut -------- 
 enable_wl_cut = True 
-wl_opt_min = 500.0 
+wl_opt_min = 450.0 
 wl_opt_max = 950.0
 
 #%% ================= Load data =================
@@ -182,19 +178,19 @@ if spectra_fitting_range == -1:
     spectra_fitting_range = n_spec
 
 #%% Test plotting code
-"""
+
 plt.figure()
-plt.plot(wl_nm,I[69,:],color="red")
+plt.plot(wl_nm,I[12,:],color="red")
 plt.plot(wl_nm, I_lamp)
 
 print("WL Shape:" + str(wl_nm.shape))
 print("Lamp Shape:" + str(I_lamp.shape))
 print("Transmission Shape:" + str(T_exp_all[0].shape))
-
+plt.savefig("test-lamp-plot.png")
 #%%
 plt.figure()
-plt.plot(wl_nm,I[69,:]/I_lamp,color="red")
-"""
+plt.plot(wl_nm,I[12,:]/I_lamp,color="red")
+plt.savefig("test-transmission-plot.png")
 #%% ================= Refractive indices =================
 N_np = mltf.get_N(
     list(materials.values()),
