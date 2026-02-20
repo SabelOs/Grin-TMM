@@ -8,7 +8,7 @@ import re
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample9_Cu_Cu2O-Vac_Shere_CuO-Vac_Sphere-120s_2_0W.csv"
+fileName = "sample9_Cu_Cu2O_CuOe-120s_2_0W_2.csv"
 results_base = Path(__file__).parent / fileName
 
 
@@ -75,22 +75,8 @@ plt.savefig(out_dir / "RMSE_vs_spectrum.png", dpi=300)
 #plt.yscale('log')
 plt.show()
 
-#% ================== 3) Thickness evolution =====================
-"""
-plt.figure(figsize=(6, 4))
-(
-    df.groupby("spectrum")[["Cu_nm", "Cu2O_nm", "CuO_nm"]]
-    .first()
-    .plot()
-)
-plt.xlabel("Spectrum index")
-plt.ylabel("Thickness (nm)")
-plt.title("Layer thickness evolution")
-plt.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig(out_dir / "thickness_evolution.png", dpi=300)
-plt.show()
-"""
+#%% ================== 3) Thickness evolution =====================
+
 addMaterialFractions = False  # <<< USER OPTION
 
 # --- find material indices automatically ---
@@ -100,48 +86,49 @@ material_indices = sorted(
     if (m := re.match(r"material_(\d+)_thickness_nm", c))
 )
 
-# --- container for effective thickness contributions ---
-# key = material name, value = list of per-spectrum thicknesses
-material_thickness = defaultdict(list)
-
 # --- group by spectrum ---
 grouped = df.groupby("spectrum").first()
 
+# --- build per-spectrum dictionaries (safe method) ---
+rows = []
+
 for spectrum, row in grouped.iterrows():
 
-    # temporary storage per spectrum
-    spectrum_contrib = defaultdict(float)
+    spectrum_contrib = {}
 
     for i in material_indices:
+
         d = row.get(f"material_{i}_thickness_nm", 0.0)
         if pd.isna(d) or d == 0:
             continue
 
-        # --- matrix ---
+        # ---------- MATRIX ----------
         mat_name = row.get(f"material_{i}_name", f"material_{i}")
         f_mat = row.get(f"material_{i}_volume_fraction", 1.0)
 
-        spectrum_contrib[(mat_name, "matrix", i)] += f_mat * d
+        key_matrix = (mat_name, "matrix", i)
+        spectrum_contrib[key_matrix] = f_mat * d
 
-        # --- inclusion ---
+        # ---------- INCLUSION ----------
         inc_name = row.get(f"inclusion_{i}_name", None)
         if inc_name and not pd.isna(inc_name):
+
             f_inc = row.get(f"inclusion_{i}_volume_fraction", 0.0)
-            spectrum_contrib[(inc_name, "inclusion", i)] += f_inc * d
 
-    # --- merge or keep separate ---
+            key_inc = (inc_name, "inclusion", i)
+            spectrum_contrib[key_inc] = f_inc * d
+
+    # --- merge materials if requested ---
     if addMaterialFractions:
-        merged = defaultdict(float)
+        merged = {}
         for (name, _, _), val in spectrum_contrib.items():
-            merged[name] += val
-        for name in merged:
-            material_thickness[name].append(merged[name])
+            merged[name] = merged.get(name, 0.0) + val
+        rows.append(merged)
     else:
-        for key, val in spectrum_contrib.items():
-            material_thickness[key].append(spectrum_contrib.get(key, 0.0))
+        rows.append(spectrum_contrib)
 
-# --- build dataframe for plotting ---
-plot_df = pd.DataFrame(material_thickness, index=grouped.index)
+# --- build dataframe safely ---
+plot_df = pd.DataFrame(rows, index=grouped.index).fillna(0)
 
 # --- reorder columns: matrix first, inclusions last ---
 matrix_cols = []
@@ -153,23 +140,21 @@ for col in plot_df.columns:
     else:
         matrix_cols.append(col)
 
-ordered_cols = matrix_cols + inclusion_cols
-plot_df = plot_df[ordered_cols]
+plot_df = plot_df[matrix_cols + inclusion_cols]
 
+# ================= LEGEND BUILDING =================
 
 legend_labels = []
-
 row0 = df.iloc[0]  # metadata source
 
 for col in plot_df.columns:
 
-    # merged case: col is just material name
+    # merged case: col is material name string
     if isinstance(col, str):
-        label = col
-        legend_labels.append(label)
+        legend_labels.append(col)
         continue
 
-    # unmerged case: col = (name, role, layer_index)
+    # unmerged case: (name, role, layer_index)
     name, role, i = col
 
     if role == "matrix":
@@ -180,18 +165,20 @@ for col in plot_df.columns:
 
     elif role == "inclusion":
         shape = row0.get(f"inclusion_{i}_shape", None)
-        vf    = row0.get(f"inclusion_{i}_volume_fraction", None)
+        vf = row0.get(f"inclusion_{i}_volume_fraction", None)
 
         label = f"+ {name}"
+
         if shape and str(shape) != "nan":
             label += f" ({shape})"
+
         if vf is not None and not pd.isna(vf):
             label += f", vf={vf:.2f}"
 
     legend_labels.append(label)
 
+# ================= PLOTTING =================
 
-# --- plot ---
 plt.figure(figsize=(6, 4))
 plot_df.plot(ax=plt.gca())
 

@@ -41,7 +41,7 @@ layers = [
         "name": "Cu",
         "matrix": "Cu",
         "shape": "sphere",
-        "thickness_init": 32.0,
+        "thickness_init": 40.0,
         "thickness_bounds": (0.0, 80.0),
         "inclusion": None,
     },
@@ -50,7 +50,7 @@ layers = [
         "matrix": "Cu2O",
         "shape": "sphere",
         "thickness_init": 0.0,
-        "thickness_bounds": (0.0, 2.0),  # ← default BEFORE override
+        "thickness_bounds": (0.0, 100.0),  # ← default BEFORE override
         "inclusion": None,
     },
     {
@@ -58,7 +58,7 @@ layers = [
         "matrix": "CuO",
         "shape": "sphere",
         "thickness_init": 0.0,
-        "thickness_bounds": (0.0, 2.0),
+        "thickness_bounds": (0.0, 100.0),
         "inclusion": None,
     }
 ]
@@ -79,20 +79,20 @@ secondary_guesses = {}
 # key = (n_spec - spec), same convention as secondary_guesses
 
 layer_bounds_overrides = {}
-layer_bounds_overrides = {
+"""layer_bounds_overrides = {
     1: {
-        "Cu2O": (0.0, 2.0),
-        "CuO": (0.0, 2.0)
+        "Cu2O": (0.0, 0.1),
+        "CuO": (0.0, 0.1)
     },
     8: {
         "Cu2O": (0.0, 10.0),
         "CuO": (0.0, 10.0),
     },
-    17: {  # applies from spectrum 17 and onward
+    10: {  # applies from spectrum 17 and onward
         "Cu2O": (0.0, 120.0),
-        "CuO": (0.0, 25.0),
+        "CuO": (0.0, 100.0),
     },
-}
+}"""
 
 #--------- File Settings -----------
 #SPE_file  = path + "/Sample1_BiggestGrin.SPE"
@@ -100,16 +100,18 @@ layer_bounds_overrides = {
 SPE_file  = path + "/Grin-2W-120s.SPE"
 Lamp_file = path + "/Substrate-Grin-2W-120s.SPE"
 
+#test_CSV = path + "/sampCu9.csv"
+
 exclude_even_spectra = True #This option is only used for the case where no automatic shutter is located at the spectrometer and there allways need to be one "flush" spectrum
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample9_Cu_Cu2O_CuOe-120s_2_0W"
+saveName = "sample9_Cu_Cu2O_CuOe-120s_2_0W_2"
 
 #-------- GA Settings -------------
 device = "cpu"
 pop_size = 100
-generations = 500
+generations = 300
 mutation_scale_thickness = 2
 mutation_scale_volume_fraction= 0.08
 elite_percentage = 0.1
@@ -121,7 +123,9 @@ stall_generations = 70
 stall_increase_mutation_factor = 5.0
 stall_increase_crossover_fraction = 0.8
 
-RMSE_convergence_threshold = 0.01
+RMSE_convergence_threshold = 0.001
+
+scaling_parameter = 0.56 #scales the transmission amplitude by this factor (used for calibration afterwards)
 
 """
 Default Values for GA with 25nm copper film:
@@ -149,7 +153,7 @@ I_lamp = SpeFile(Lamp_file).data[substrateSpectrum_no, :, 0]
 I = np.array([moving_average_same(x, 5) for x in I])
 I_lamp = moving_average_same(I_lamp, 5)
 
-T_exp_all = I / I_lamp
+T_exp_all = np.multiply(I / I_lamp, scaling_parameter)
 
 if np.any((T_exp_all < 0) | (T_exp_all > 1)):
     print("WARNING: T_exp_all contains values outside the [0, 1] interval.\n")
@@ -171,25 +175,43 @@ if enable_wl_cut:
     I_lamp = I_lamp[wl_mask]
     I = I[:,wl_mask]
 lambda_nm = torch.tensor(wl_nm, dtype=torch.float64, device=device)
+"""
+CSV_DF = pd.read_csv(test_CSV, delimiter='\t', header = 1)
 
+wl_nm = CSV_DF['Wavelength (nm)'].to_numpy()
+T_csv = CSV_DF['%T'].to_numpy()
+
+# convert percent → fraction if necessary
+if T_csv.max() > 1:
+    T_csv = T_csv / 100.0
+
+# make it 2D like SPE pipeline
+T_exp_all = T_csv[np.newaxis, :]   # shape (1, N)
+
+# convert to torch
+lambda_nm = torch.tensor(wl_nm, dtype=torch.float64, device=device)
+T_exp_all = torch.tensor(T_exp_all, dtype=torch.float64, device=device)
+"""
 n_spec = T_exp_all.shape[0]
 
 if spectra_fitting_range == -1:
     spectra_fitting_range = n_spec
 
-#%% Test plotting code
 
+
+#%% Test plotting code
+"""
 plt.figure()
-plt.plot(wl_nm,I[12,:],color="red")
+plt.plot(wl_nm,I[-1,:],color="red")
 plt.plot(wl_nm, I_lamp)
 
 print("WL Shape:" + str(wl_nm.shape))
 print("Lamp Shape:" + str(I_lamp.shape))
 print("Transmission Shape:" + str(T_exp_all[0].shape))
-plt.savefig("test-lamp-plot.png")
+plt.savefig("test-lamp-plot.png")"""
 #%%
 plt.figure()
-plt.plot(wl_nm,I[12,:]/I_lamp,color="red")
+plt.plot(wl_nm,T_exp_all[-1,:],color="red")
 plt.savefig("test-transmission-plot.png")
 #%% ================= Refractive indices =================
 N_np = mltf.get_N(
