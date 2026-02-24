@@ -50,12 +50,12 @@ layers = [
         "matrix": "Cu2O",
         "shape": "sphere",
         "thickness_init": 0.0,
-        "thickness_bounds": (0.0, 100.0),  # ← default BEFORE override
+        "thickness_bounds": (0.0, 10.0),  # ← default BEFORE override
         "inclusion": {
-            "material": "CuO",
+            "material": "Vacuum",
             "shape": "sphere",
             "fraction_init": 0.0,
-            "bounds": (0.0, 1.0),
+            "bounds": (0.0, 0.3),
         },
     },
     {
@@ -63,8 +63,13 @@ layers = [
         "matrix": "CuO",
         "shape": "sphere",
         "thickness_init": 0.0,
-        "thickness_bounds": (0.0, 100.0),  # ← default BEFORE override
-        "inclusion": None,
+        "thickness_bounds": (10.0, 0.0),  # ← default BEFORE override
+        "inclusion": {
+            "material": "Vacuum",
+            "shape": "sphere",
+            "fraction_init": 0.0,
+            "bounds": (0.0, 0.3),
+        },
     },
 
 ]
@@ -85,20 +90,12 @@ secondary_guesses = {}
 # key = (n_spec - spec), same convention as secondary_guesses
 
 layer_bounds_overrides = {}
-"""layer_bounds_overrides = {
-    1: {
-        "Cu2O": (0.0, 0.1),
-        "CuO": (0.0, 0.1)
+layer_bounds_overrides = {
+    16: {
+        "Cu2O": (0.0, 150),
+        "CuO": (0.0, 150)
     },
-    8: {
-        "Cu2O": (0.0, 10.0),
-        "CuO": (0.0, 10.0),
-    },
-    10: {  # applies from spectrum 17 and onward
-        "Cu2O": (0.0, 120.0),
-        "CuO": (0.0, 100.0),
-    },
-}"""
+}
 
 #--------- File Settings -----------
 #SPE_file  = path + "/Sample1_BiggestGrin.SPE"
@@ -112,14 +109,14 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample9_Cu_Cu2O-CuO_sphere-CuO-120s_2_0W_2"
+saveName = "sample9_Cu_Cu2O-Vacuum_sphere_CuO-Vacuum_sphere-120s_2_0W"
 
 #-------- GA Settings -------------
 device = "cpu"
-pop_size = 50
-generations = 100
-mutation_scale_thickness = 2
-mutation_scale_volume_fraction= 0.03
+pop_size = 70
+generations = 150
+mutation_scale_thickness = 5
+mutation_scale_volume_fraction= 0.06
 elite_percentage = 0.1
 mutation_rate = 0.1
 crossover_fraction = 0.8
