@@ -8,7 +8,7 @@ import re
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample9_Cu_Cu2O-Vac_sphere_CuO-120s_2_0W_2.csv"
+fileName = "sample9_Cu_Cu2O-CuO_sphere-CuO-120s_2_0W_2.csv"
 results_base = Path(__file__).parent / fileName
 
 
@@ -196,6 +196,23 @@ plt.legend(
 
 plt.tight_layout()
 plt.savefig(out_dir / "thickness_evolution.png", dpi=300)
+plt.show()
+
+# Second plot: accumulated thickness
+plt.figure(figsize=(6, 4))
+
+
+# Sum all columns except the first one
+accumulated_thickness = plot_df.iloc[:, 0:].sum(axis=1)
+
+plt.plot(accumulated_thickness, marker='o')
+plt.xlabel("Spectrum index")
+plt.ylabel("Accumulated thickness (nm)")
+plt.title("Accumulated thickness evolution")
+plt.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig(out_dir / "accumulated_thickness.png", dpi=300)
 plt.show()
 #%% ================== 4) Residuals =====================
 df["residual"] = df["T_fit"] - df["T_exp"]

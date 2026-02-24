@@ -52,10 +52,10 @@ layers = [
         "thickness_init": 0.0,
         "thickness_bounds": (0.0, 100.0),  # ← default BEFORE override
         "inclusion": {
-            "material": "Vacuum",
+            "material": "CuO",
             "shape": "sphere",
             "fraction_init": 0.0,
-            "bounds": (0.0, 0.2),
+            "bounds": (0.0, 1.0),
         },
     },
     {
@@ -63,9 +63,10 @@ layers = [
         "matrix": "CuO",
         "shape": "sphere",
         "thickness_init": 0.0,
-        "thickness_bounds": (0.0, 100.0),
+        "thickness_bounds": (0.0, 100.0),  # ← default BEFORE override
         "inclusion": None,
-    }
+    },
+
 ]
 
 
@@ -111,12 +112,12 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample9_Cu_Cu2O-Vac_sphere_CuO-120s_2_0W_2"
+saveName = "sample9_Cu_Cu2O-CuO_sphere-CuO-120s_2_0W_2"
 
 #-------- GA Settings -------------
 device = "cpu"
-pop_size = 100
-generations = 150
+pop_size = 50
+generations = 100
 mutation_scale_thickness = 2
 mutation_scale_volume_fraction= 0.03
 elite_percentage = 0.1
