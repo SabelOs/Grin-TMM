@@ -50,21 +50,26 @@ layers = [
         "matrix": "Cu2O",
         "shape": "sphere",
         "thickness_init": 0.0,
-        "thickness_bounds": (0.0, 150.0),  # ← default BEFORE override
+        "thickness_bounds": (0.0, 0.0),  # ← default BEFORE override
         "inclusion": {
-            "material": "Cu",
+            "material": "Vacuum",
             "shape": "sphere",
             "fraction_init": 0.0,
             "bounds": (0.0, 0.3),
-        }
+        },
     },
     {
         "name": "CuO",
         "matrix": "CuO",
         "shape": "sphere",
         "thickness_init": 0.0,
-        "thickness_bounds": (0.0, 150.0),  # ← default BEFORE override
-        "inclusion": None,
+        "thickness_bounds": (0.0, 0.0),  # ← default BEFORE override
+        "inclusion": {
+            "material": "Vacuum",
+            "shape": "sphere",
+            "fraction_init": 0.0,
+            "bounds": (0.0, 0.3),
+        },
     },
 
 ]
@@ -85,27 +90,16 @@ secondary_guesses = {}
 # key = (n_spec - spec), same convention as secondary_guesses
 
 layer_bounds_overrides = {}
-"""layer_bounds_overrides = {
-    12: {
-        "Cu2O": (0.0, 150),
+layer_bounds_overrides = {
+    15: {
+        "Cu2O": (0.0, 250),
         "CuO": (0.0, 150)
     },
-    22: {
-        "Cu": (0.0, 3.0),
-        "Cu2O": (50, 120),
-        "CuO": (0.0, 15),
-    },
-    32: {
-        "Cu": (0.0, 3.0),
-        "Cu2O": (30, 65),
-        "CuO": (10, 60),
-    },
     42: {
-        "Cu": (0.0, 3.0),
-        "Cu2O": (0, 45),
-        "CuO": (40, 80),
+        "Cu2O": (0.0, 120.0),
+        "CuO": (30.0, 150.0),
     },
-}"""
+}
 
 #--------- File Settings -----------
 #SPE_file  = path + "/Sample1_BiggestGrin.SPE"
@@ -119,7 +113,7 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample9_Cu_Cu2O-Cu_sphere_CuO-120s_2_0W_test2"
+saveName = "sample9_Cu_Cu2O-Vacuum_sphere_CuO-120s_2_0W_test5"
 
 #-------- GA Settings -------------
 device = "cpu"
@@ -133,7 +127,7 @@ crossover_fraction = 0.8
 redo_on_rmse_jump = False
 
 stall_generations = 30
-stall_increase_mutation_factor = 5.0
+stall_increase_mutation_factor = 10.0
 stall_increase_crossover_fraction = 0.8
 
 RMSE_convergence_threshold = 0.001
