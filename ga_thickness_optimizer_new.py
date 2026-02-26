@@ -21,7 +21,8 @@ class GeneticThicknessOptimizer:
         mutation_scale_thickness = 1,
         crossover_fraction = 0.8,
         stall_generations=20,
-        stall_increase_mutation_factor=2,
+        stall_increase_mutation_factor_thickness=2,
+        stall_increase_mutation_factor_volume_fraction = 2,
         stall_increase_crossover_fraction=2,
         RMSE_convergence_threshold=0.01,
     ):
@@ -47,7 +48,8 @@ class GeneticThicknessOptimizer:
         self.elite_fraction = elite_fraction
 
         self.stall_generations = stall_generations
-        self.stall_increase_mutation_factor = stall_increase_mutation_factor
+        self.stall_increase_mutation_factor_thickness = stall_increase_mutation_factor_thickness
+        self.stall_increase_mutation_factor_volume_fraction = stall_increase_mutation_factor_volume_fraction
         self.stall_increase_crossover_fraction = stall_increase_crossover_fraction
 
         self.RMSE_convergence_threshold = RMSE_convergence_threshold
@@ -172,21 +174,21 @@ class GeneticThicknessOptimizer:
             # --- Gene-wise mutation ---
             # --- effective mutation rate ---
             if self.boosted:
-                mutation_rate_eff = min(
-                    self.base_mutation_rate * self.stall_increase_mutation_factor,
-                    1.0,
-                )
+                max_mutation_size_thickness = self.mutation_scale_thickness * self.stall_increase_mutation_factor_thickness
+                max_mutation_size_volume_fraction = self.mutation_scale_volume_fraction * self.stall_increase_mutation_factor_volume_fraction
             else:
-                mutation_rate_eff = self.base_mutation_rate
+                max_mutation_size_thickness = self.mutation_scale_thickness
+                max_mutation_size_volume_fraction = self.mutation_scale_volume_fraction
 
-            mutation_mask = torch.rand(self.n_params, device=self.device) < mutation_rate_eff
+            mutation_mask = torch.rand(self.n_params, device=self.device) < self.base_mutation_rate
 
 
             # Thickness mutations
             if mutation_mask[:n_layers].any():
-                child[:n_layers][mutation_mask[:n_layers]] += (
-                    torch.randn(mutation_mask[:n_layers].sum(), device=self.device)
-                    * self.mutation_scale_thickness
+                idx = mutation_mask[:n_layers]
+                child[:n_layers][idx] += (
+                    torch.randn(idx.sum(), device=self.device)
+                    * max_mutation_size_thickness
                 )
 
             # Volume fraction mutations — ONLY if thickness >= 0.1
@@ -194,7 +196,7 @@ class GeneticThicknessOptimizer:
                 if child[i] >= 0.1 and mutation_mask[i]: #mutation individually mutation_mask[n_layers + i]:
                     child[n_layers + i] += (
                         torch.randn((), device=self.device)
-                        * self.mutation_scale_volume_fraction
+                        * max_mutation_size_volume_fraction 
                     )
 
             child = self._project_bounds(child)

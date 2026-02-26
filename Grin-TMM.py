@@ -42,7 +42,7 @@ layers = [
         "matrix": "Cu",
         "shape": "sphere",
         "thickness_init": 34.59,
-        "thickness_bounds": (0.0, 40.0),
+        "thickness_bounds": (0.0, 45.0),
         "inclusion": None,
     },
     {
@@ -55,8 +55,8 @@ layers = [
             "material": "Vacuum",
             "shape": "sphere",
             "fraction_init": 0.0,
-            "bounds": (0.0, 0.3),
-        },
+            "bounds": (0.0, 0.2),
+        }
     },
     {
         "name": "CuO",
@@ -68,8 +68,8 @@ layers = [
             "material": "Vacuum",
             "shape": "sphere",
             "fraction_init": 0.0,
-            "bounds": (0.0, 0.3),
-        },
+            "bounds": (0.0, 0.2),
+        }
     },
 
 ]
@@ -91,13 +91,208 @@ secondary_guesses = {}
 
 layer_bounds_overrides = {}
 layer_bounds_overrides = {
+    1: {
+        "Cu": (33.72, 41.21),
+    },
+    2: {
+        "Cu": (33.42, 40.84),
+    },
+    3: {
+        "Cu": (33.13, 40.49),
+    },
+    4: {
+        "Cu": (33.13, 40.49),
+    },
+    5: {
+        "Cu": (32.41, 39.62),
+    },
+    6: {
+        "Cu": (31.57, 38.59),
+    },
+    7: {
+        "Cu": (31.08, 37.98),
+    },
+    8: {
+        "Cu": (30.14, 36.83),
+    },
+    9: {
+        "Cu": (29.61, 36.19),
+    },
+    10: {
+        "Cu": (28.74, 35.13),
+    },
+    11: {
+        "Cu": (27.75, 33.91),
+    },
+    12: {
+        "Cu": (29.34, 35.86),
+        "CuO": (12.11, 14.8),
+    },
+    13: {
+        "Cu": (28.31, 34.6),
+        "CuO": (13.98, 17.09),
+    },
+    14: {
+        "Cu": (27.23, 33.29),
+        "CuO": (15.75, 19.25),
+    },
     15: {
-        "Cu2O": (0.0, 250),
-        "CuO": (0.0, 150)
+        "Cu": (25.25, 30.86),
+        "CuO": (17.51, 21.4),
+    },
+    16: {
+        "Cu": (23.25, 28.42),
+        "CuO": (19.23, 23.5),
+    },
+    17: {
+        "Cu": (21.54, 26.32),
+        "CuO": (20.56, 25.13),
+    },
+    18: {
+        "Cu": (20.47, 25.02),
+        "CuO": (21.94, 26.82),
+    },
+    19: {
+        "Cu": (7.4, 9.04),
+        "Cu2O": (67.09, 82.0),
+        "CuO": (29.61, 36.19),
+    },
+    20: {
+        "Cu": (5.83, 7.12),
+        "Cu2O": (59.18, 72.33),
+        "CuO": (30.77, 37.61),
+    },
+    21: {
+        "Cu": (4.01, 4.9),
+        "Cu2O": (54.49, 66.59),
+        "CuO": (26.55, 32.45),
+    },
+    22: {
+        "Cu2O": (53.2, 65.02),
+        "CuO": (14.69, 17.95),
+    },
+    23: {
+        "Cu2O": (57.76, 70.59),
+        "CuO": (9.05, 11.06),
+    },
+    24: {
+        "Cu2O": (58.6, 71.63),
+        "CuO": (7.71, 9.43),
+    },
+    25: {
+        "Cu2O": (58.86, 71.94),
+        "CuO": (7.31, 8.93),
+    },
+    26: {
+        "Cu2O": (59.05, 72.17),
+        "CuO": (6.92, 8.45),
+    },
+    27: {
+        "Cu2O": (59.05, 72.17),
+        "CuO": (6.81, 8.33),
+    },
+    28: {
+        "Cu2O": (58.93, 72.03),
+        "CuO": (6.78, 8.29),
+    },
+    29: {
+        "Cu2O": (58.93, 72.02),
+        "CuO": (6.79, 8.3),
+    },
+    30: {
+        "Cu2O": (58.89, 71.98),
+        "CuO": (6.79, 8.3),
+    },
+    31: {
+        "Cu2O": (58.78, 71.84),
+        "CuO": (6.99, 8.54),
+    },
+    32: {
+        "Cu2O": (58.31, 71.26),
+        "CuO": (7.48, 9.14),
+    },
+    33: {
+        "Cu2O": (57.57, 70.36),
+        "CuO": (8.5, 10.39),
+    },
+    34: {
+        "Cu2O": (56.9, 69.55),
+        "CuO": (9.52, 11.64),
+    },
+    35: {
+        "Cu2O": (54.77, 66.94),
+        "CuO": (12.17, 14.87),
+    },
+    36: {
+        "Cu2O": (52.8, 64.53),
+        "CuO": (14.47, 17.69),
+    },
+    37: {
+        "Cu2O": (51.72, 63.22),
+        "CuO": (15.84, 19.36),
+    },
+    38: {
+        "Cu": (0.42, 0.52),
+        "Cu2O": (49.38, 60.35),
+        "CuO": (23.05, 28.17),
+    },
+    39: {
+        "Cu2O": (46.51, 56.84),
+        "CuO": (21.44, 26.21),
+    },
+    40: {
+        "Cu2O": (42.03, 51.37),
+        "CuO": (26.11, 31.92),
+    },
+    41: {
+        "Cu2O": (37.79, 46.19),
+        "CuO": (30.41, 37.17),
     },
     42: {
-        "Cu2O": (0.0, 120.0),
-        "CuO": (30.0, 150.0),
+        "Cu2O": (32.74, 40.01),
+        "CuO": (36.04, 44.05),
+    },
+    43: {
+        "Cu2O": (17.88, 21.85),
+        "CuO": (54.34, 66.42),
+    },
+    44: {
+        "Cu2O": (13.24, 16.18),
+        "CuO": (60.32, 73.72),
+    },
+    45: {
+        "Cu2O": (11.25, 13.75),
+        "CuO": (62.21, 76.03),
+    },
+    46: {
+        "Cu2O": (9.41, 11.51),
+        "CuO": (64.28, 78.57),
+    },
+    47: {
+        "Cu2O": (5.8, 7.09),
+        "CuO": (67.73, 82.79),
+    },
+    48: {
+        "Cu2O": (3.44, 4.2),
+        "CuO": (69.95, 85.5),
+    },
+    49: {
+        "Cu2O": (2.11, 2.58),
+        "CuO": (70.86, 86.61),
+    },
+    50: {
+        "Cu2O": (0.38, 0.46),
+        "CuO": (72.46, 88.56),
+    },
+    51: {
+        "Cu": (0.89, 1.09),
+        "Cu2O": (3.64, 4.45),
+        "CuO": (72.71, 88.86),
+    },
+    52: {
+        "Cu": (0.89, 1.09),
+        "Cu2O": (3.86, 4.72),
+        "CuO": (72.52, 88.63),
     },
 }
 
@@ -113,21 +308,22 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample9_Cu_Cu2O-Vacuum_sphere_CuO-120s_2_0W_test5"
+saveName = "sample9_Cu_Cu2O-Vaccumm_spheres_CuO-Vacuum_spheres-120s_2_0W_bounds_clamping_4"
 
 #-------- GA Settings -------------
 device = "cpu"
 pop_size = 50
 generations = 100
 mutation_scale_thickness = 5
-mutation_scale_volume_fraction= 0.01
+mutation_scale_volume_fraction= 0.00025
 elite_percentage = 0.1
 mutation_rate = 0.1
 crossover_fraction = 0.8
 redo_on_rmse_jump = False
 
 stall_generations = 30
-stall_increase_mutation_factor = 10.0
+stall_increase_mutation_factor_thickness = 2.0
+stall_increase_mutation_factor_volume_fraction = 2.0
 stall_increase_crossover_fraction = 0.8
 
 RMSE_convergence_threshold = 0.001
@@ -345,7 +541,8 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
         mutation_scale_thickness=mutation_scale_thickness,
         crossover_fraction=crossover_fraction,
         stall_generations=stall_generations,
-        stall_increase_mutation_factor=stall_increase_mutation_factor,
+        stall_increase_mutation_factor_thickness=stall_increase_mutation_factor_thickness,
+        stall_increase_mutation_factor_volume_fraction= stall_increase_mutation_factor_volume_fraction,
         stall_increase_crossover_fraction=stall_increase_crossover_fraction,
         RMSE_convergence_threshold=RMSE_convergence_threshold,
     )
@@ -393,7 +590,8 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
             mutation_scale_thickness=mutation_scale_thickness,
             crossover_fraction=crossover_fraction,
             stall_generations=stall_generations,
-            stall_increase_mutation_factor=stall_increase_mutation_factor,
+            stall_increase_mutation_factor_thickness=stall_increase_mutation_factor_thickness,
+            stall_increase_mutation_factor_volume_fraction = stall_increase_mutation_factor_volume_fraction,
             stall_increase_crossover_fraction=stall_increase_crossover_fraction,
             RMSE_convergence_threshold=RMSE_convergence_threshold,
         )

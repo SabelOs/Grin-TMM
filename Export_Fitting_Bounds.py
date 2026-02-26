@@ -4,9 +4,9 @@ from pathlib import Path
 
 # ================= USER SETTINGS =================
 
-fileName = "sample9_Cu_Cu2O-Vacuum_sphere_CuO-120s_2_0W_test5.csv"
+fileName = "sample9_Cu_Cu2O_CuO-120s_2_0W_test1.csv"
 
-relative_interval = 0.10   # 0.10 = ±10%, 0.0 = exact value
+relative_interval = 0.20   # 0.10 = ±10%, 0.0 = exact value
 round_digits = 2           # rounding of printed values
 
 # =================================================
