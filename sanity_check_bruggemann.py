@@ -10,7 +10,8 @@ from tmm_fast import coh_tmm
 from bruggemann_mixing import bruggeman_n
 
 #%% ================= User settings =================
-device = "cuda" if torch.cuda.is_available() else "cpu"
+#device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cpu"
 dtype = torch.complex128
 
 # -------- Paths --------
@@ -120,3 +121,5 @@ plt.show()
 
 
 3 # %%
+
+# %%
