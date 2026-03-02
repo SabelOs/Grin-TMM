@@ -253,7 +253,7 @@ layers = [
         "matrix": "Cu",
         "shape": "sphere",
         "thickness_init": 34.59,
-        "thickness_bounds": (0.0, 45.0),
+        "thickness_bounds": (0.0, 60.0),
         "inclusion": None,
     },
     {
@@ -262,12 +262,7 @@ layers = [
         "shape": "sphere",
         "thickness_init": 0.0,
         "thickness_bounds": (0.0, 150.0),  # ← default BEFORE override
-        "inclusion": {
-            "material": "Cu",
-            "shape": "sphere",
-            "fraction_init": 0.0,
-            "bounds": (0.0, 1.0),
-        }
+        "inclusion": None,
     },
     {
         "name": "CuO",
@@ -305,7 +300,7 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample9_Cu_Cu2O-Cu_sphere_CuO-120s_2_0W"
+saveName = "sample9_Cu_Cu2O-CuO-120s_2_0W-SclingOptimisations_0_4"
 
 #-------- GA Settings -------------
 device = "cpu"
@@ -325,8 +320,8 @@ stall_increase_crossover_fraction = 0.8
 
 RMSE_convergence_threshold = 0.001
 
-scaling_parameter = 0.56 #scales the transmission amplitude by this factor (used for calibration afterwards)
-
+#scaling_parameter = 0.56 #scales the transmission amplitude by this factor (used for calibration afterwards)
+scaling_parameter = 0.4
 """
 Default Values for GA with 25nm copper film:
 device = "cpu"
