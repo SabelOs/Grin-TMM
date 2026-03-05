@@ -8,7 +8,7 @@ import re
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample9_Cu_Cu2O-Vacuum_sphere-CuO_sphere-60s_2W.csv"
+fileName = "sample9_Cu_Cu2O-CuO-sphere-60s_2W.csv"
 results_base = Path(__file__).parent / fileName
 
 
@@ -239,10 +239,14 @@ for i in layer_indices:
             alpha=0.3,
             linestyle="--"
         )
+        
+        # --- Hide inclusion line where total layer thinner than 1 nm ---
+        inc_line_height = layer_offset + inc_height
+        inc_line_height = np.where(thickness_series < 1.0, np.nan, inc_line_height)
 
         line, = plt.plot(
             spectra_index,
-            layer_offset + inc_height,
+            inc_line_height,
             color=color,
             linestyle="--"
         )
@@ -264,11 +268,15 @@ for i in layer_indices:
         alpha=0.15
     )
 
+    # --- Hide line where layer thinner than 1 nm ---
+    line_height = base_offset + thickness_series
+    line_height = np.where(thickness_series < 1.0, np.nan, line_height)
+
     line, = plt.plot(
         spectra_index,
-        base_offset + thickness_series,
+        line_height,
         color=matrix_color,
-        linewidth=2
+        linewidth=3
     )
 
     if matrix_mat not in legend_handles:
