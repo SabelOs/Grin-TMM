@@ -88,6 +88,8 @@ def bruggeman_n(
     # --- Fast path: no inclusions anywhere ---
     if torch.all(f1.abs() < 1e-6):
         return n2
+    if torch.all(f1.abs() >= 1-1e-6):
+        return n1
 
     eps1 = n1 ** 2
     eps2 = n2 ** 2
