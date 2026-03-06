@@ -59,12 +59,12 @@ layers = [
         "thickness_init": 0.0,
         "thickness_bounds": (0.0, 150.0),
         "inclusions": [
-            {
-                "material": "CuO",
-                "shape": "sphere",
-                "fraction_init": 0.0,
-                "bounds": (0.0, 1.0),
-            },
+        {
+            "material": "CuO",
+            "shape": "sphere",
+            "fraction_init": 0.0,
+            "bounds": (0.0, 1.0),
+        },
         ],
     },
 ]

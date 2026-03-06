@@ -2,13 +2,14 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from matplotlib.colors import TwoSlopeNorm
 from pathlib import Path
 import re
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample9_Cu_Cu2O-CuO-sphere-60s_2W.csv"
+fileName = "sample9_Cu_Cu2O_CuO-60s_2W.csv"
 results_base = Path(__file__).parent / fileName
 
 
@@ -199,14 +200,16 @@ plt.show()
 # 3) NEW STACKED LAYER / INCLUSION PLOT
 # =================================================
 
+import matplotlib.pyplot as plt
+
 color_map = {
     "Cu": "orange",
     "Cu2O": "red",
     "CuO": "green",
-    "Vacuum" : "blue",
+    "Vacuum": "blue",
 }
 
-plt.figure(figsize=(7,5))
+fig, ax = plt.subplots(figsize=(7,5))
 
 base_offset = np.zeros(len(grouped))
 legend_handles = {}
@@ -231,7 +234,7 @@ for i in layer_indices:
 
         color = color_map.get(inc_mat, "gray")
 
-        fill = plt.fill_between(
+        ax.fill_between(
             spectra_index,
             layer_offset,
             layer_offset + inc_height,
@@ -239,10 +242,11 @@ for i in layer_indices:
             alpha=0.3,
             linestyle="--"
         )
-        
-        # --- Hide inclusion line where total layer thinner than 1 nm ---
+
         inc_line_height = layer_offset + inc_height
         inc_line_height = np.where(thickness_series < 1.0, np.nan, inc_line_height)
+        inc_line_height = np.where(inc_height < 0.05, np.nan, inc_line_height)
+        
 
         line, = plt.plot(
             spectra_index,
@@ -251,7 +255,6 @@ for i in layer_indices:
             linestyle="--"
         )
 
-        # --- Add legend entry only once per material ---
         if inc_mat not in legend_handles:
             legend_handles[inc_mat] = line
 
@@ -260,7 +263,7 @@ for i in layer_indices:
     # ---------- matrix ----------
     matrix_color = color_map.get(matrix_mat, "gray")
 
-    fill = plt.fill_between(
+    ax.fill_between(
         spectra_index,
         base_offset,
         base_offset + thickness_series,
@@ -268,11 +271,13 @@ for i in layer_indices:
         alpha=0.15
     )
 
-    # --- Hide line where layer thinner than 1 nm ---
     line_height = base_offset + thickness_series
-    line_height = np.where(thickness_series < 1.0, np.nan, line_height)
 
-    line, = plt.plot(
+    # Do not hide thin regions for the first layer
+    if i != layer_indices[0]:
+        line_height = np.where(thickness_series < 1.0, np.nan, line_height)
+
+    line, = ax.plot(
         spectra_index,
         line_height,
         color=matrix_color,
@@ -285,22 +290,67 @@ for i in layer_indices:
     base_offset += thickness_series
 
 
-plt.xlabel("Spectrum index",fontsize=13)
-plt.ylabel("Layer height / nm",fontsize=13)
-plt.title("Layer stack evolution (inclusions stacked)")
-plt.grid(True, alpha=0.3)
+# ================= MAIN AXIS STYLE =================
+ax.set_xlabel("Spectrum index", fontsize=14)
+ax.set_ylabel("Layer height / nm", fontsize=14)
+#ax.set_title("Layer stack evolution (inclusions stacked)", fontsize=16)
 
-# ---------- Clean Legend ----------
-plt.legend(
+ax.tick_params(axis='both', labelsize=12, width = 2, length = 4)
+
+# thicker frame instead of grid
+for spine in ax.spines.values():
+    spine.set_linewidth(2)
+
+# legend
+ax.legend(
     legend_handles.values(),
     legend_handles.keys(),
     title="Materials",
-    fontsize=13,
-    title_fontsize=15,
+    fontsize=12,
+    title_fontsize=13,
+    loc = 2,
 )
 
+
+# =================================================
+# RMSE INSET
+# =================================================
+ax_inset = inset_axes(
+    ax, 
+    width="30%",   # relative to main axes
+    height="30%",  # relative to main axes
+    loc='upper right',  # anchor corner
+    borderpad=0     # optional padding
+)
+
+rmse_series = grouped["RMSE"]
+
+ax_inset.plot(
+    spectra_index,
+    rmse_series,
+    color="black",
+    linewidth=2
+)
+
+# highlight current spectrum position if desired
+# ax_inset.axvline(current_spec, color="red", linestyle="--", linewidth=2)
+
+ax_inset.set_xlabel("Spec", fontsize=12)
+ax_inset.set_ylabel("RMSE", fontsize=12)
+
+ax_inset.tick_params(axis='both', labelsize=12, width = 2, length = 4)
+
+# thick frame
+for spine in ax_inset.spines.values():
+    spine.set_linewidth(2)
+
+# remove grid
+ax_inset.grid(False)
+
+
 plt.tight_layout()
-plt.savefig(out_dir / "thickness_stacked_layers.png", dpi=300)
+
+plt.savefig(out_dir / "thickness_stacked_layers_plus_RMSE.png", dpi=300)
 plt.show()
 
 #%% ================== 4) Residuals =====================
