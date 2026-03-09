@@ -53,12 +53,18 @@ layers = [
         "inclusions": None,
     },
     {
-        "name": "Cu2O",
-        "matrix": "Cu2O",
+        "name": "2-Cu",
+        "matrix": "Cu",
         "shape": "sphere",
         "thickness_init": 0.0,
         "thickness_bounds": (0.0, 150.0),
         "inclusions": [
+        {
+            "material": "Cu2O",
+            "shape": "chain",
+            "fraction_init": 0.0,
+            "bounds": (0.0, 1.0),
+        },
         {
             "material": "CuO",
             "shape": "sphere",
@@ -66,6 +72,14 @@ layers = [
             "bounds": (0.0, 1.0),
         },
         ],
+    },
+    {
+        "name" : "CuO",
+        "matrix" : "CuO",
+        "shape" : "sphere",
+        "thickness_init" : 0.0,
+        "thickness_bounds" : (0.0, 60.0),
+        "inclusions": None,
     },
 ]
 
@@ -92,7 +106,7 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample9_Cu_Cu2O-CuO-sphere-60s_2W"
+saveName = "sample9_Cu_Cu-Cu2O-sphere-CuO-sphere-60s_2W"
 
 #-------- GA Settings -------------
 device = "cpu"

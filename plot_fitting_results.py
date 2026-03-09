@@ -9,7 +9,7 @@ import re
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample9_Cu_Cu2O_CuO-60s_2W.csv"
+fileName = "sample9_Cu_Cu-Cu2O-chain-CuO-sphere-60s_2W.csv"
 results_base = Path(__file__).parent / fileName
 
 
@@ -200,8 +200,6 @@ plt.show()
 # 3) NEW STACKED LAYER / INCLUSION PLOT
 # =================================================
 
-import matplotlib.pyplot as plt
-
 color_map = {
     "Cu": "orange",
     "Cu2O": "red",
@@ -221,6 +219,18 @@ for i in layer_indices:
     matrix_mat = grouped[f"layer_{i}_matrix"].iloc[0]
 
     layer_offset = base_offset.copy()
+
+    # ---- create neighbour-aware mask ----
+    threshold = 1.0
+    below = thickness_series < threshold
+    mask = np.zeros_like(below, dtype=bool)
+
+    if len(below) > 1:
+        mask[1:-1] = below[1:-1] & below[:-2] & below[2:]
+        mask[0] = below[0] & below[1]
+        mask[-1] = below[-1] & below[-2]
+    else:
+        mask[:] = below
 
     # ---------- inclusions ----------
     for j in layer_inclusions[i]:
@@ -244,9 +254,7 @@ for i in layer_indices:
         )
 
         inc_line_height = layer_offset + inc_height
-        inc_line_height = np.where(thickness_series < 1.0, np.nan, inc_line_height)
-        inc_line_height = np.where(inc_height < 0.05, np.nan, inc_line_height)
-        
+        inc_line_height = np.where(mask, np.nan, inc_line_height)
 
         line, = plt.plot(
             spectra_index,
@@ -255,6 +263,7 @@ for i in layer_indices:
             linestyle="--"
         )
 
+        # --- Add legend entry only once per material ---
         if inc_mat not in legend_handles:
             legend_handles[inc_mat] = line
 
@@ -271,11 +280,12 @@ for i in layer_indices:
         alpha=0.15
     )
 
+    # --- Hide line where layer thinner than 1 nm ---
     line_height = base_offset + thickness_series
 
     # Do not hide thin regions for the first layer
     if i != layer_indices[0]:
-        line_height = np.where(thickness_series < 1.0, np.nan, line_height)
+        line_height = np.where(mask, np.nan, line_height)
 
     line, = ax.plot(
         spectra_index,
@@ -295,7 +305,7 @@ ax.set_xlabel("Spectrum index", fontsize=14)
 ax.set_ylabel("Layer height / nm", fontsize=14)
 #ax.set_title("Layer stack evolution (inclusions stacked)", fontsize=16)
 
-ax.tick_params(axis='both', labelsize=12, width = 2, length = 4)
+ax.tick_params(axis='both', labelsize=14, width = 2, length = 4)
 
 # thicker frame instead of grid
 for spine in ax.spines.values():
@@ -338,7 +348,7 @@ ax_inset.plot(
 ax_inset.set_xlabel("Spec", fontsize=12)
 ax_inset.set_ylabel("RMSE", fontsize=12)
 
-ax_inset.tick_params(axis='both', labelsize=12, width = 2, length = 4)
+ax_inset.tick_params(axis='both', labelsize=14, width = 2, length = 4)
 
 # thick frame
 for spine in ax_inset.spines.values():
@@ -349,8 +359,7 @@ ax_inset.grid(False)
 
 
 plt.tight_layout()
-
-plt.savefig(out_dir / "thickness_stacked_layers_plus_RMSE.png", dpi=300)
+plt.savefig(out_dir / "thickness_stacked_layers.png", dpi=300)
 plt.show()
 
 #%% ================== 4) Residuals =====================
