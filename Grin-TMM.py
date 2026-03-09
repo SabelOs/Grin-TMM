@@ -53,32 +53,19 @@ layers = [
         "inclusions": None,
     },
     {
-        "name": "2-Cu",
-        "matrix": "Cu",
+        "name": "Cu2O",
+        "matrix": "Cu2O",
         "shape": "sphere",
         "thickness_init": 0.0,
         "thickness_bounds": (0.0, 150.0),
-        "inclusions": [
-        {
-            "material": "Cu2O",
-            "shape": "chain",
-            "fraction_init": 0.0,
-            "bounds": (0.0, 1.0),
-        },
-        {
-            "material": "CuO",
-            "shape": "sphere",
-            "fraction_init": 0.0,
-            "bounds": (0.0, 1.0),
-        },
-        ],
+        "inclusions": None,
     },
     {
         "name" : "CuO",
         "matrix" : "CuO",
         "shape" : "sphere",
         "thickness_init" : 0.0,
-        "thickness_bounds" : (0.0, 60.0),
+        "thickness_bounds" : (0.0, 150.0),
         "inclusions": None,
     },
 ]
@@ -97,8 +84,8 @@ secondary_guesses = {}
 
 
 #--------- File Settings -----------
-SPE_file  = path + "/Grin-2W-60s.SPE"
-Lamp_file = path + "/Substrate-Grin-2W-60s.SPE"
+SPE_file  = path + "/Grin-2W-40s.SPE"
+Lamp_file = path + "/Substrate-Grin-2W-40s.SPE"
 
 #test_CSV = path + "/sampCu9.csv"
 
@@ -106,7 +93,7 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample9_Cu_Cu-Cu2O-sphere-CuO-sphere-60s_2W"
+saveName = "sample9_Cu_Cu2O_CuO-40s_2W_scale-0_7"
 
 #-------- GA Settings -------------
 device = "cpu"
@@ -127,7 +114,7 @@ stall_increase_crossover_fraction = 0.8
 
 RMSE_convergence_threshold = 0.001
 
-scaling_parameter = 0.56 #scales the transmission amplitude by this factor (used for calibration afterwards)
+scaling_parameter = 0.7 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
 
 # -------- Wavelength cut -------- 
 enable_wl_cut = True 
