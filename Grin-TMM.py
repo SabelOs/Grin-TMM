@@ -57,7 +57,7 @@ layers = [
         "matrix": "Cu2O",
         "shape": "sphere",
         "thickness_init": 0.0,
-        "thickness_bounds": (0.0, 150.0),
+        "thickness_bounds": (0.0, 250.0),
         "inclusions": None,
     },
     {
@@ -65,7 +65,7 @@ layers = [
         "matrix" : "CuO",
         "shape" : "sphere",
         "thickness_init" : 0.0,
-        "thickness_bounds" : (0.0, 150.0),
+        "thickness_bounds" : (0.0, 60.0),
         "inclusions": None,
     },
 ]
@@ -93,7 +93,7 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample9_Cu_Cu2O_CuO-40s_2W_scale-0_7"
+saveName = "sample9_Cu_Cu2O_CuO-40s_2W_scale-0_6"
 
 #-------- GA Settings -------------
 device = "cpu"
@@ -114,7 +114,7 @@ stall_increase_crossover_fraction = 0.8
 
 RMSE_convergence_threshold = 0.001
 
-scaling_parameter = 0.7 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
+scaling_parameter = 0.6 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
 
 # -------- Wavelength cut -------- 
 enable_wl_cut = True 

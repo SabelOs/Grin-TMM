@@ -9,8 +9,9 @@ import re
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample9_Cu_Cu2O_CuO-40s_2W_scale-0_7.csv"
-results_base = Path(__file__).parent / fileName
+fileName = "sample9_Cu_Cu2O_CuO-40s_2W_scale-0_6.csv"
+additional_folder = ""#"Sample-9-Grin-2W-40s"
+results_base = Path(__file__).parent / additional_folder /fileName
 
 
 use_pickle = True   # set False to use CSV instead
@@ -18,7 +19,7 @@ use_pickle = True   # set False to use CSV instead
 # Output directory for plots
 outDirName = "plots_" + fileName[:-4]
 
-out_dir = Path(__file__).parent / outDirName
+out_dir = Path(__file__).parent / additional_folder / outDirName
 out_dir.mkdir(exist_ok=True)
 
 #%% ================== Load results =====================
@@ -221,7 +222,7 @@ for i in layer_indices:
     layer_offset = base_offset.copy()
 
     # ---- create neighbour-aware mask ----
-    threshold = 1.0
+    threshold = 0.1
     below = thickness_series < threshold
     mask = np.zeros_like(below, dtype=bool)
 
@@ -330,7 +331,7 @@ ax_inset = inset_axes(
     width="30%",   # relative to main axes
     height="30%",  # relative to main axes
     loc='upper right',  # anchor corner
-    borderpad=0     # optional padding
+    borderpad=2     # optional padding
 )
 
 rmse_series = grouped["RMSE"]
@@ -345,7 +346,7 @@ ax_inset.plot(
 # highlight current spectrum position if desired
 # ax_inset.axvline(current_spec, color="red", linestyle="--", linewidth=2)
 
-ax_inset.set_xlabel("Spec", fontsize=12)
+#ax_inset.set_xlabel("Spec", fontsize=12)
 ax_inset.set_ylabel("RMSE", fontsize=12)
 
 ax_inset.tick_params(axis='both', labelsize=14, width = 2, length = 4)
@@ -434,6 +435,7 @@ plt.savefig(out_dir / "T_diff_2D.png", dpi=300)
 plt.show()
 
 print("\nAll plots saved to:", out_dir)
+
 
 
 # %%
