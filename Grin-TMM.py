@@ -93,7 +93,7 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample9_Cu_Cu2O_CuO-40s_2W_scale-0_6"
+saveName = "sample9_Cu_Cu2O_CuO-40s_2W_scale-0_56"
 
 #-------- GA Settings -------------
 device = "cpu"
@@ -114,7 +114,7 @@ stall_increase_crossover_fraction = 0.8
 
 RMSE_convergence_threshold = 0.001
 
-scaling_parameter = 0.6 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
+scaling_parameter = 0.56 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
 
 # -------- Wavelength cut -------- 
 enable_wl_cut = True 
@@ -177,15 +177,17 @@ if spectra_fitting_range == -1:
     spectra_fitting_range = n_spec
 
 #%% Test plotting code
-"""
-plt.figure()
-plt.plot(wl_nm,I[-1,:],color="red")
-plt.plot(wl_nm, I_lamp)
 
+plt.figure()
+plt.plot(wl_nm,I[-1,:],color="red",label="Cu")
+plt.plot(wl_nm, I_lamp,label="Lamp")
+plt.xlabel("Wavelength / nm", fontsize=14)
+plt.ylabel("Counts", fontsize=14)
+plt.legend(fontsize=12)
 print("WL Shape:" + str(wl_nm.shape))
 print("Lamp Shape:" + str(I_lamp.shape))
 print("Transmission Shape:" + str(T_exp_all[0].shape))
-plt.savefig("test-lamp-plot.png")"""
+plt.savefig("test-lamp-plot.png")
 #%%
 plt.figure()
 plt.plot(wl_nm,T_exp_all[-1,:],color="red")

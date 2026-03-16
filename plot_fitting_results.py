@@ -9,7 +9,7 @@ import re
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample9_Cu_Cu2O_CuO-40s_2W_scale-0_6.csv"
+fileName = "sample9_Cu_Cu2O_CuO-40s_2W_scale-0_56.csv"
 additional_folder = ""#"Sample-9-Grin-2W-40s"
 results_base = Path(__file__).parent / additional_folder /fileName
 
