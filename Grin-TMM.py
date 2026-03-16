@@ -84,8 +84,8 @@ secondary_guesses = {}
 
 
 #--------- File Settings -----------
-SPE_file  = path + "/Grin-2W-40s.SPE"
-Lamp_file = path + "/Substrate-Grin-2W-40s.SPE"
+SPE_file  = path + "/16_03_2026-Sample9-remeasured/GRIN-3W-100s.SPE"
+Lamp_file = path + "/16_03_2026-Sample9-remeasured/Substrate-3W.SPE"
 
 #test_CSV = path + "/sampCu9.csv"
 
@@ -93,7 +93,7 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample9_Cu_Cu2O_CuO-40s_2W_scale-0_56"
+saveName = "sample9-remeasured_Cu_Cu2O_CuO-100s_3W_scale-0_75"
 
 #-------- GA Settings -------------
 device = "cpu"
@@ -114,7 +114,7 @@ stall_increase_crossover_fraction = 0.8
 
 RMSE_convergence_threshold = 0.001
 
-scaling_parameter = 0.56 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
+scaling_parameter = 0.75 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
 
 # -------- Wavelength cut -------- 
 enable_wl_cut = True 
