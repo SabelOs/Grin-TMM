@@ -65,7 +65,7 @@ layers = [
         "matrix" : "CuO",
         "shape" : "sphere",
         "thickness_init" : 0.0,
-        "thickness_bounds" : (0.0, 60.0),
+        "thickness_bounds" : (0.0, 90.0),
         "inclusions": None,
     },
 ]
@@ -84,7 +84,7 @@ secondary_guesses = {}
 
 
 #--------- File Settings -----------
-SPE_file  = path + "/16_03_2026-Sample9-remeasured/GRIN-3W-100s.SPE"
+SPE_file  = path + "/16_03_2026-Sample9-remeasured/GRIN-3W-40s.SPE"
 Lamp_file = path + "/16_03_2026-Sample9-remeasured/Substrate-3W.SPE"
 
 #test_CSV = path + "/sampCu9.csv"
@@ -93,12 +93,13 @@ exclude_even_spectra = True #This option is only used for the case where no auto
 substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of single spectrum use 0)
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
-saveName = "sample9-remeasured_Cu_Cu2O_CuO-100s_3W_scale-0_75"
+#saveName = "sample9-remeasured_Cu_Cu2O_CuO-40s_3W_scale-0_65"
+saveName = "benchmark-random-structure"
 
 #-------- GA Settings -------------
 device = "cpu"
-pop_size = 50
-generations = 100
+pop_size = 80
+generations = 150
 smart_mutation_scaling = True
 mutation_scale_thickness = 5 #5 best value usually
 mutation_scale_volume_fraction= 0.035 #guessed value because sigma= (xmax-xmin) / 6
@@ -107,14 +108,14 @@ mutation_rate = 0.1
 crossover_fraction = 0.8
 redo_on_rmse_jump = False
 
-stall_generations = 30
+stall_generations = 50
 stall_increase_mutation_factor_thickness = 2.0
 stall_increase_mutation_factor_volume_fraction = 2.0
 stall_increase_crossover_fraction = 0.8
 
 RMSE_convergence_threshold = 0.001
 
-scaling_parameter = 0.75 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
+scaling_parameter = 1 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
 
 # -------- Wavelength cut -------- 
 enable_wl_cut = True 
@@ -133,6 +134,7 @@ I = np.array([moving_average_same(x, 5) for x in I])
 I_lamp = moving_average_same(I_lamp, 5)
 
 T_exp_all = np.multiply(I / I_lamp, scaling_parameter)
+
 
 if np.any((T_exp_all < 0) | (T_exp_all > 1)):
     print("WARNING: T_exp_all contains values outside the [0, 1] interval.\n")
@@ -153,6 +155,13 @@ if enable_wl_cut:
 
     I_lamp = I_lamp[wl_mask]
     I = I[:,wl_mask]
+
+#======== BENCHMARK IMPORT ========
+# --- load wavelength axis ---
+wl_nm = np.load("random-structure_benchmark_wl.npy")
+# --- load transmission ---
+T_exp_all = np.load("random-structure_benchmark_T.npy")
+
 lambda_nm = torch.tensor(wl_nm, dtype=torch.float64, device=device)
 """
 CSV_DF = pd.read_csv(test_CSV, delimiter='\t', header = 1)
@@ -178,16 +187,16 @@ if spectra_fitting_range == -1:
 
 #%% Test plotting code
 
-plt.figure()
-plt.plot(wl_nm,I[-1,:],color="red",label="Cu")
-plt.plot(wl_nm, I_lamp,label="Lamp")
-plt.xlabel("Wavelength / nm", fontsize=14)
-plt.ylabel("Counts", fontsize=14)
-plt.legend(fontsize=12)
-print("WL Shape:" + str(wl_nm.shape))
-print("Lamp Shape:" + str(I_lamp.shape))
-print("Transmission Shape:" + str(T_exp_all[0].shape))
-plt.savefig("test-lamp-plot.png")
+# plt.figure()
+# plt.plot(wl_nm,I[-1,:],color="red",label="Cu")
+# plt.plot(wl_nm, I_lamp,label="Lamp")
+# plt.xlabel("Wavelength / nm", fontsize=14)
+# plt.ylabel("Counts", fontsize=14)
+# plt.legend(fontsize=12)
+# print("WL Shape:" + str(wl_nm.shape))
+# print("Lamp Shape:" + str(I_lamp.shape))
+# print("Transmission Shape:" + str(T_exp_all[0].shape))
+# plt.savefig("test-lamp-plot.png")
 #%%
 plt.figure()
 plt.plot(wl_nm,T_exp_all[-1,:],color="red")

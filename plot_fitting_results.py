@@ -9,7 +9,7 @@ import re
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample9-remeasured_Cu_Cu2O_CuO-100s_3W_scale-0_75.csv"
+fileName = "benchmark-random-structure.csv"
 additional_folder = ""#"Sample-9-Grin-2W-40s"
 results_base = Path(__file__).parent / additional_folder /fileName
 
@@ -319,7 +319,7 @@ ax.legend(
     title="Materials",
     fontsize=12,
     title_fontsize=13,
-    loc = 2,
+    loc = "upper left",
 )
 
 
@@ -435,6 +435,7 @@ plt.savefig(out_dir / "T_diff_2D.png", dpi=300)
 plt.show()
 
 print("\nAll plots saved to:", out_dir)
+
 
 
 
