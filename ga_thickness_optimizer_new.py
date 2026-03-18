@@ -27,6 +27,7 @@ class GeneticThicknessOptimizer:
         stall_increase_crossover_fraction=2,
         RMSE_convergence_threshold=0.01,
         smart_mutation_scaling = False,
+        increase_mutation_rate_stall = 2,
     ):
         self.fitness_fn = fitness_fn
         self.n_layers = n_layers
@@ -65,8 +66,7 @@ class GeneticThicknessOptimizer:
         self.n_fractions = int(self.inclusions_per_layer.sum().item())
         self.n_genes = self.n_layers + self.n_fractions
 
-        #define thickness and volume fraction bounds
-
+        self.increase_mutation_rate_stall = increase_mutation_rate_stall
     
     def _project_bounds(self, x: torch.Tensor) -> torch.Tensor:
 
@@ -144,6 +144,7 @@ class GeneticThicknessOptimizer:
                     frac_offset += 1
 
             self.population.append(ind)
+        self.evaluate()
 
 
     def evaluate(self):
@@ -153,11 +154,10 @@ class GeneticThicknessOptimizer:
         )
 
     def step(self):
-        self.evaluate()
 
         idx = torch.argsort(self.fitness)
         n_elite = max(1, int(self.elite_fraction * len(idx)))
-        elites = [self.population[i] for i in idx[:n_elite]]
+        elites = [self.population[i].clone() for i in idx[:n_elite]]
 
         new_population = elites.copy()
         n_layers = self.n_layers
@@ -213,10 +213,30 @@ class GeneticThicknessOptimizer:
         while len(new_population) < self.population_size:
             # --- Select primary elite parent ---
             primary_idx = torch.randint(0, n_elite, (), device=self.device)
-            child = elite_stack[primary_idx].clone()
+            parent_A = elite_stack[primary_idx]
 
-                        # --- Gene-wise mutation ---
-            # --- effective mutation rate ---
+            # --- Initialize child ---
+            child = parent_A.clone()
+
+            # --- CROSSOVER (gene mixing) ---
+            n_cross = int(self.crossover_fraction * self.n_genes)
+
+            if n_cross < self.n_genes:
+                # indices that stay from parent A
+                keep_idx = torch.randperm(self.n_genes, device=self.device)[:n_cross]
+
+                # mask: True = keep from A, False = replace
+                mask = torch.zeros(self.n_genes, dtype=torch.bool, device=self.device)
+                mask[keep_idx] = True
+
+                # fill remaining genes from OTHER elites
+                for gene_idx in range(self.n_genes):
+                    if not mask[gene_idx]:
+                        # pick another elite (can be same, doesn't matter much)
+                        donor_idx = torch.randint(0, n_elite, (), device=self.device)
+                        child[gene_idx] = elite_stack[donor_idx, gene_idx]
+            
+            # --- Gene-wise mutation ---
             if self.boosted:
                 max_mutation_size_thickness = (
                     self.mutation_scale_thickness
@@ -226,14 +246,18 @@ class GeneticThicknessOptimizer:
                     self.mutation_scale_volume_fraction
                     * self.stall_increase_mutation_factor_volume_fraction
                 )
+                mutation_mask = (
+                    torch.rand(self.n_genes, device=self.device)
+                    < self.base_mutation_rate * self.increase_mutation_rate_stall
+                )
             else:
                 max_mutation_size_thickness = self.mutation_scale_thickness
                 max_mutation_size_volume_fraction = self.mutation_scale_volume_fraction
 
-            mutation_mask = (
-                torch.rand(self.n_genes, device=self.device)
-                < self.base_mutation_rate
-            )
+                mutation_mask = (
+                    torch.rand(self.n_genes, device=self.device)
+                    < self.base_mutation_rate
+                )
 
             # Thickness mutations
             if mutation_mask[:self.n_layers].any():
@@ -291,7 +315,7 @@ class GeneticThicknessOptimizer:
             new_population.append(child)
 
         self.population = new_population[:self.population_size]
-
+        self.evaluate()
 
 
     def run(self, generations):

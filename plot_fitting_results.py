@@ -9,7 +9,7 @@ import re
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "sample9-remeasured_Cu_Cu2O_CuO-1W-540s.csv"
+fileName = "benchmark_pop30_gen1000_sigma6_mutrat0_2_mutratestall_5_elite_0_1_stall50_crossover0_8_bugfix-added-mutationstallincrease.csv"
 additional_folder = ""#"Sample-9-Grin-2W-40s"
 results_base = Path(__file__).parent / additional_folder /fileName
 
@@ -42,7 +42,7 @@ df = df_results.sort_values(["spectrum", "wavelength_nm"])
 
 spectra_ids = sorted(df["spectrum"].unique())
 
-for spec in spectra_ids[::5]:
+for spec in spectra_ids[::1]:
     df_spec = df[df["spectrum"] == spec]
 
     plt.figure(figsize=(6, 4))
@@ -73,9 +73,9 @@ plt.ylabel("RMSE")
 plt.title("Fit error per spectrum")
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig(out_dir / "RMSE_vs_spectrum.png", dpi=300)
+#plt.savefig(out_dir / "RMSE_vs_spectrum.png", dpi=300)
 #plt.yscale('log')
-plt.show()
+#plt.show()
 
 #%% ================== 3) Thickness evolution (NEW STRUCTURE) =====================
 
@@ -144,8 +144,8 @@ plt.ylabel("Effective thickness (nm)")
 plt.title("Individual material contributions")
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig(out_dir / "thickness_individual.png", dpi=300)
-plt.show()
+#plt.savefig(out_dir / "thickness_individual.png", dpi=300)
+#plt.show()
 
 
 # =================================================
@@ -193,8 +193,8 @@ plt.ylabel("Accumulated effective thickness (nm)")
 plt.title("Accumulated material thickness")
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig(out_dir / "thickness_accumulated.png", dpi=300)
-plt.show()
+#plt.savefig(out_dir / "thickness_accumulated.png", dpi=300)
+#plt.show()
 
 #%%
 # =================================================

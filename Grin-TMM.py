@@ -35,6 +35,11 @@ materials = {
 # --- Spectrum-dependent layer bound overrides ---
 # key = (n_spec - spec), same convention as secondary_guesses
 layer_bounds_overrides = {}
+# layer_bounds_overrides = {
+#     12: {
+#         "CuO": (0.0, 100.0),
+#     }
+# }
 
 """{
             "material": "Cu2O",
@@ -65,7 +70,7 @@ layers = [
         "matrix" : "CuO",
         "shape" : "sphere",
         "thickness_init" : 0.0,
-        "thickness_bounds" : (0.0, 90.0),
+        "thickness_bounds" : (0.0, 10.0),
         "inclusions": None,
     },
 ]
@@ -94,28 +99,29 @@ substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
 #saveName = "sample9-remeasured_Cu_Cu2O_CuO-40s_3W_scale-0_65"
-saveName = "sample9-remeasured_Cu_Cu2O_CuO-1W-540s"
+saveName = "benchmark_pop30_gen1000_sigma6_mutrat0_2_mutratestall_5_elite_0_1_stall50_crossover0_8_bugfix-added-mutationstallincrease"
 
 #-------- GA Settings -------------
 device = "cpu"
-pop_size = 50
-generations = 100
+pop_size = 30
+generations = 1000
 smart_mutation_scaling = True
 mutation_scale_thickness = 5 #5 best value usually
 mutation_scale_volume_fraction= 0.035 #guessed value because sigma= (xmax-xmin) / 6
 elite_percentage = 0.1
-mutation_rate = 0.1
+mutation_rate = 0.2
 crossover_fraction = 0.8
 redo_on_rmse_jump = False
 
-stall_generations = 30
+stall_generations = 50
 stall_increase_mutation_factor_thickness = 2.0
 stall_increase_mutation_factor_volume_fraction = 2.0
 stall_increase_crossover_fraction = 0.8
+increase_mutation_rate_stall = 5 
 
-RMSE_convergence_threshold = 0.001
+RMSE_convergence_threshold = 0.0
 
-scaling_parameter = 0.65 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
+scaling_parameter = 1 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
 
 # -------- Wavelength cut -------- 
 enable_wl_cut = True 
@@ -158,9 +164,9 @@ if enable_wl_cut:
 
 #======== BENCHMARK IMPORT ========
 # --- load wavelength axis ---
-#wl_nm = np.load("random-structure_benchmark_wl.npy")
+wl_nm = np.load("benchmark_wl.npy")
 # --- load transmission ---
-#T_exp_all = np.load("random-structure_benchmark_T.npy")
+T_exp_all = np.load("benchmark_T.npy")
 
 lambda_nm = torch.tensor(wl_nm, dtype=torch.float64, device=device)
 """
@@ -375,6 +381,7 @@ for spec in range(n_spec - 1, n_spec - spectra_fitting_range - 1, -1):
         RMSE_convergence_threshold=RMSE_convergence_threshold,
         smart_mutation_scaling = smart_mutation_scaling,
         inclusions_per_layer = inclusions_per_layer,
+        increase_mutation_rate_stall = increase_mutation_rate_stall
     )
 
     ga.initialize(init_d, init_f)
