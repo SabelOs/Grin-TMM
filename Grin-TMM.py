@@ -84,8 +84,8 @@ secondary_guesses = {}
 
 
 #--------- File Settings -----------
-SPE_file  = path + "/16_03_2026-Sample9-remeasured/GRIN-3W-40s.SPE"
-Lamp_file = path + "/16_03_2026-Sample9-remeasured/Substrate-3W.SPE"
+SPE_file  = path + "/16_03_2026-Sample9-remeasured/GRIN-1W-540s.SPE"
+Lamp_file = path + "/16_03_2026-Sample9-remeasured/Substrate-1W.SPE"
 
 #test_CSV = path + "/sampCu9.csv"
 
@@ -94,12 +94,12 @@ substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
 #saveName = "sample9-remeasured_Cu_Cu2O_CuO-40s_3W_scale-0_65"
-saveName = "benchmark-random-structure"
+saveName = "sample9-remeasured_Cu_Cu2O_CuO-1W-540s"
 
 #-------- GA Settings -------------
 device = "cpu"
-pop_size = 80
-generations = 150
+pop_size = 50
+generations = 100
 smart_mutation_scaling = True
 mutation_scale_thickness = 5 #5 best value usually
 mutation_scale_volume_fraction= 0.035 #guessed value because sigma= (xmax-xmin) / 6
@@ -108,14 +108,14 @@ mutation_rate = 0.1
 crossover_fraction = 0.8
 redo_on_rmse_jump = False
 
-stall_generations = 50
+stall_generations = 30
 stall_increase_mutation_factor_thickness = 2.0
 stall_increase_mutation_factor_volume_fraction = 2.0
 stall_increase_crossover_fraction = 0.8
 
 RMSE_convergence_threshold = 0.001
 
-scaling_parameter = 1 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
+scaling_parameter = 0.65 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
 
 # -------- Wavelength cut -------- 
 enable_wl_cut = True 
@@ -158,9 +158,9 @@ if enable_wl_cut:
 
 #======== BENCHMARK IMPORT ========
 # --- load wavelength axis ---
-wl_nm = np.load("random-structure_benchmark_wl.npy")
+#wl_nm = np.load("random-structure_benchmark_wl.npy")
 # --- load transmission ---
-T_exp_all = np.load("random-structure_benchmark_T.npy")
+#T_exp_all = np.load("random-structure_benchmark_T.npy")
 
 lambda_nm = torch.tensor(wl_nm, dtype=torch.float64, device=device)
 """
