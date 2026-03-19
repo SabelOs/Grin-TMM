@@ -28,6 +28,7 @@ class GeneticThicknessOptimizer:
         RMSE_convergence_threshold=0.01,
         smart_mutation_scaling = False,
         increase_mutation_rate_stall = 2,
+        sigma = 6,
     ):
         self.fitness_fn = fitness_fn
         self.n_layers = n_layers
@@ -67,6 +68,7 @@ class GeneticThicknessOptimizer:
         self.n_genes = self.n_layers + self.n_fractions
 
         self.increase_mutation_rate_stall = increase_mutation_rate_stall
+        self.sigma = sigma
     
     def _project_bounds(self, x: torch.Tensor) -> torch.Tensor:
 
@@ -185,7 +187,7 @@ class GeneticThicknessOptimizer:
                 else:
                     tmin = self.tmin
 
-                raw_scale = (best_individual[i] - tmin) / 6.0
+                raw_scale = (best_individual[i] - tmin) / self.sigma
 
                 # Clamp to minimum
                 thickness_scales[i] = torch.maximum(
@@ -199,7 +201,7 @@ class GeneticThicknessOptimizer:
             for i, (fmin, _) in enumerate(self.f_bounds):
                 raw_scale = (
                     best_individual[self.n_layers + i] - fmin
-                ) / 6.0
+                ) / self.sigma
 
                 fraction_scales[i] = torch.maximum(
                     raw_scale,
