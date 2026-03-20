@@ -187,7 +187,7 @@ class GeneticThicknessOptimizer:
                 else:
                     tmin = self.tmin
 
-                raw_scale = (best_individual[i] - tmin) / self.sigma
+                raw_scale = (best_individual[i] - tmin) / self.sigma[torch.randint(0, len(self.sigma), (1,))]
 
                 # Clamp to minimum
                 thickness_scales[i] = torch.maximum(
@@ -201,7 +201,7 @@ class GeneticThicknessOptimizer:
             for i, (fmin, _) in enumerate(self.f_bounds):
                 raw_scale = (
                     best_individual[self.n_layers + i] - fmin
-                ) / self.sigma
+                ) / self.sigma[torch.randint(0, len(self.sigma), (1,))]
 
                 fraction_scales[i] = torch.maximum(
                     raw_scale,

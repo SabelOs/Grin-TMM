@@ -99,7 +99,7 @@ substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
 #saveName = "sample9-remeasured_Cu_Cu2O_CuO-40s_3W_scale-0_65"
-saveName = "benchmark_pop50_gen1000_sigma5_mutrate0_3_mutratestall_5_elite_0_1_stall50_crossover0_8_bugfix-added-mutationstallincrease-smartScaling_2"
+saveName = "benchmark_pop50_gen1000_sigma1_and_6_mutrate0_3_mutratestall_5_elite_0_1_stall50_crossover0_8_bugfix-added-mutationstallincrease-smartScaling_2"
 
 #-------- GA Settings -------------
 device = "cpu"
@@ -118,7 +118,7 @@ stall_increase_mutation_factor_thickness = 2.0
 stall_increase_mutation_factor_volume_fraction = 2.0
 stall_increase_crossover_fraction = 0.8
 increase_mutation_rate_stall = 5 
-sigma = 5
+sigma = [1,6]
 
 RMSE_convergence_threshold = 0.0
 
