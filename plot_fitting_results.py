@@ -9,7 +9,7 @@ import re
 from collections import defaultdict
 #%% ================== User settings =====================
 # Path to results (pickle preferred)
-fileName = "benchmark_pop50_gen1000_sigma1_and_6_mutrate0_3_mutratestall_5_elite_0_1_stall50_crossover0_8_bugfix-added-mutationstallincrease-smartScaling_2.csv"
+fileName = "benchmark_pop50_gen1000_sigma6_mutrate0_3_mutratestall_5_elite_0_1_stall50_crossover0_8_bugfix-added-mutationstallincrease-smartScaling_2.csv"
 additional_folder = ""#"Sample-9-Grin-2W-40s"
 results_base = Path(__file__).parent / additional_folder /fileName
 
