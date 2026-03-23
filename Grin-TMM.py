@@ -99,7 +99,7 @@ substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
 #saveName = "sample9-remeasured_Cu_Cu2O_CuO-40s_3W_scale-0_65"
-saveName = "benchmark_pop50_gen1000_sigma6_mutrate0_3_mutratestall_5_elite_0_1_stall50_crossover0_8_bugfix-added-mutationstallincrease-smartScaling_2"
+saveName = "benchmark-random_pop50_gen1000_sigma0.3_6_mutrate0_3_mutratestall_5_elite_0_1_stall50_crossover0_8_bugfix-added-mutationstallincrease-smartScaling"
 
 #-------- GA Settings -------------
 device = "cpu"
@@ -118,7 +118,7 @@ stall_increase_mutation_factor_thickness = 2.0
 stall_increase_mutation_factor_volume_fraction = 2.0
 stall_increase_crossover_fraction = 0.8
 increase_mutation_rate_stall = 5 
-sigma = [6,6]
+sigma = [0.3,6]
 
 RMSE_convergence_threshold = 0.0
 
@@ -167,7 +167,7 @@ if enable_wl_cut:
 # --- load wavelength axis ---
 wl_nm = np.load("benchmark_wl.npy")
 # --- load transmission ---
-T_exp_all = np.load("benchmark_T.npy")
+T_exp_all = np.load("random-structure_benchmark_T.npy")
 
 lambda_nm = torch.tensor(wl_nm, dtype=torch.float64, device=device)
 """

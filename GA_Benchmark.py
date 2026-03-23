@@ -123,6 +123,64 @@ for i in range(1, n_spectra):
 
 thicknesses = np.array(thicknesses)
 thicknesses = thicknesses[::-1] #invert to account for actual data structure
+
+#%% ================= HARD BENCHMARK (VARIABLE TOTAL THICKNESS) =================
+
+n_spectra = 10
+thicknesses = []
+
+min_total = 20.0
+max_total = 100.0
+
+def random_layer():
+    total = np.random.uniform(min_total, max_total)
+    r = np.random.rand(3)
+    r = r / r.sum()
+    return r * total
+
+current = random_layer()
+thicknesses.append(current)
+
+for i in range(1, n_spectra):
+
+    jump_prob = 0.5
+
+    if np.random.rand() < jump_prob:
+        # BIG jump (new total thickness too)
+        new = random_layer()
+
+    else:
+        # --- chaotic step ---
+        step = np.random.normal(0, 20.0, size=3)
+        new = current + step
+
+        # remove negatives
+        new = np.clip(new, 0.0, None)
+
+        # --- DO NOT normalize to fixed thickness ---
+        total = new.sum()
+
+        # if too small or too large → rescale into allowed range
+        if total > 0:
+            target_total = np.random.uniform(min_total, max_total)
+            new = new / total * target_total
+        else:
+            new = random_layer()
+
+    # --- brutal discontinuity ---
+    if np.random.rand() < 0.3:
+        dominant = np.random.choice([0, 1, 2])
+        total = np.random.uniform(min_total, max_total)
+
+        new = np.zeros(3)
+        new[dominant] = total
+
+    thicknesses.append(new)
+    current = new
+
+thicknesses = np.array(thicknesses)
+thicknesses = thicknesses[::-1]
+
 #%% ================= FORWARD MODEL =====================
 def simulate_T(d):
 
