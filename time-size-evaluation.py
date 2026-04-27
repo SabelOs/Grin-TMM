@@ -3,14 +3,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
+#There has to be a mistake here, these are the lens radii and not diameter
 times_1W = [150, 300, 480, 540]
-diam_1W = [57.8, 114.73, 99.81, 132.12] 
+diam_1W = np.array([57.8, 114.73, 99.81, 132.12])*2
 
 times_2W = [20, 40, 60, 80, 100, 120]
-diam_2W = [193.47, 219.33, 242.03, 265.42, 275.92, 279.09]
+diam_2W = np.array([193.47, 219.33, 242.03, 265.42, 275.92, 279.09])*2
 
 times_3W = [40, 60, 80, 100, 120]
-diam_3W = [144.43, 152.89, 168.96, 179.09, 192.37]
+diam_3W = np.array([144.43, 152.89, 168.96, 179.09, 192.37])*2
 
 fig, ax = plt.subplots()
 
@@ -31,6 +32,6 @@ ax.legend(fontsize=13)
 #axins.plot(times_1W, diam_1W, marker='o', color='tab:green', label="1 W")
 #axins.set_title("1 W", fontsize=12)
 #axins.tick_params(axis='both', labelsize=10)
-
+plt.savefig("lens-size-evaluation-plot.png")
 plt.show()
 # %%
