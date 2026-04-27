@@ -15,8 +15,8 @@ diam_3W = [144.43, 152.89, 168.96, 179.09, 192.37]
 fig, ax = plt.subplots()
 
 # main plot
-ax.plot(times_2W, diam_2W, marker='o', label="2 W")
-ax.plot(times_3W, diam_3W, marker='s', label="3 W")
+ax.plot(times_2W, diam_2W, marker='o', label="3 W")
+ax.plot(times_3W, diam_3W, marker='s', label="2 W")
 
 ax.set_ylabel("Lens Diameter / $\mu$m", fontsize=16)
 ax.set_xlabel("Laser Duration / s", fontsize=16)
