@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 
 #%% ================== User settings =====================
-fileName = "sample9_Cu_Cu2O_CuO-120s_3W_scale-0_6.csv"
+fileName = "sample9-remeasured_Cu_Cu2O_CuO-1W-540s.csv"
 additional_folder = ""
 
 results_base = Path(__file__).parent / additional_folder / fileName
@@ -208,6 +208,7 @@ for idx, i in enumerate(layer_indices):
             layer_offset + inc_height,
             color=color,
             linestyle="--",
+            linewidth=3,
             zorder=z_base + 1
         )
 
