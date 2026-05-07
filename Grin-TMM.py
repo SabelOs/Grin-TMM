@@ -99,7 +99,7 @@ substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
 #saveName = "sample9-remeasured_Cu_Cu2O_CuO-40s_3W_scale-0_65"
-saveName = "sample9-3W-120s-sigma_2_and_6-scale-0.56-mutationrate-0.5"
+saveName = "benchmark-simple-structure-sigma_2_and_6-scale-0.56-mutationrate-0.5"
 
 #-------- GA Settings -------------
 device = "cpu"
@@ -165,9 +165,9 @@ if enable_wl_cut:
 
 #======== BENCHMARK IMPORT ========
 # --- load wavelength axis ---
-#wl_nm = np.load("benchmark_wl.npy")
+wl_nm = np.load("easy-structure_benchmark_wl.npy")
 # --- load transmission ---
-#T_exp_all = np.load("random-structure_benchmark_T.npy")
+T_exp_all = np.load("easy-structure_benchmark_T.npy")
 
 lambda_nm = torch.tensor(wl_nm, dtype=torch.float64, device=device)
 """

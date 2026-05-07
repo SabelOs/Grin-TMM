@@ -70,6 +70,56 @@ for i in range(remaining):
 thicknesses = np.array(thicknesses)
 thicknesses = thicknesses[::-1] #invert to account for actual data structure
 
+#%% ================= SPECTRA PLOTS =====================
+color_map = {
+    "Cu": [0.98,0.42,0.14],
+    "Cu2O": [0.98,0.67,0.15],
+    "CuO": [0.57,0.57,0.57],
+    "Vacuum": "blue",
+}
+fig, ax = plt.subplots(figsize=(7,5))
+
+spectra_index = np.arange(n_spectra)
+base_offset = np.zeros(n_spectra)
+
+labels = ["Cu", "Cu2O", "CuO"]
+
+for i, mat in enumerate(labels):
+
+    layer = thicknesses[:, i]
+
+    ax.fill_between(
+        spectra_index,
+        base_offset,
+        base_offset + layer,
+        color=color_map[mat],
+        alpha=0.3,
+        label=mat
+    )
+
+    ax.plot(
+        spectra_index,
+        base_offset + layer,
+        color=color_map[mat],
+        linewidth=2
+    )
+
+    base_offset += layer
+
+ax.set_xlabel("Spectrum index", fontsize=14)
+ax.set_ylabel("Layer height / nm", fontsize=14)
+
+ax.legend(loc = "upper right")
+ax.tick_params(axis='both', labelsize=12)
+
+for spine in ax.spines.values():
+    spine.set_linewidth(2)
+
+outFilename = "easy-structure"
+plt.tight_layout()
+plt.savefig(path / str(outFilename + "_spectra"), dpi=300)
+plt.show()
+
 #%% ================= RANDOMIZED LAYER EVOLUTION =================
 
 n_spectra = 10
@@ -124,62 +174,118 @@ for i in range(1, n_spectra):
 thicknesses = np.array(thicknesses)
 thicknesses = thicknesses[::-1] #invert to account for actual data structure
 
-#%% ================= HARD BENCHMARK (VARIABLE TOTAL THICKNESS) =================
 
-n_spectra = 10
-thicknesses = []
+#%% ================= SPECTRA PLOTS =====================
+color_map = {
+    "Cu": [0.98,0.42,0.14],
+    "Cu2O": [0.98,0.67,0.15],
+    "CuO": [0.57,0.57,0.57],
+    "Vacuum": "blue",
+}
+fig, ax = plt.subplots(figsize=(7,5))
 
-min_total = 20.0
-max_total = 100.0
+spectra_index = np.arange(n_spectra)
+base_offset = np.zeros(n_spectra)
 
-def random_layer():
-    total = np.random.uniform(min_total, max_total)
-    r = np.random.rand(3)
-    r = r / r.sum()
-    return r * total
+labels = ["Cu", "Cu2O", "CuO"]
 
-current = random_layer()
-thicknesses.append(current)
+for i, mat in enumerate(labels):
 
-for i in range(1, n_spectra):
+    layer = thicknesses[:, i]
 
-    jump_prob = 0.5
+    ax.fill_between(
+        spectra_index,
+        base_offset,
+        base_offset + layer,
+        color=color_map[mat],
+        alpha=0.3,
+        label=mat
+    )
 
-    if np.random.rand() < jump_prob:
-        # BIG jump (new total thickness too)
-        new = random_layer()
+    ax.plot(
+        spectra_index,
+        base_offset + layer,
+        color=color_map[mat],
+        linewidth=2
+    )
 
-    else:
-        # --- chaotic step ---
-        step = np.random.normal(0, 20.0, size=3)
-        new = current + step
+    base_offset += layer
 
-        # remove negatives
-        new = np.clip(new, 0.0, None)
+ax.set_xlabel("Spectrum index", fontsize=14)
+ax.set_ylabel("Layer height / nm", fontsize=14)
 
-        # --- DO NOT normalize to fixed thickness ---
-        total = new.sum()
+ax.legend(loc = "upper right")
+ax.tick_params(axis='both', labelsize=12)
 
-        # if too small or too large → rescale into allowed range
-        if total > 0:
-            target_total = np.random.uniform(min_total, max_total)
-            new = new / total * target_total
-        else:
-            new = random_layer()
+for spine in ax.spines.values():
+    spine.set_linewidth(2)
 
-    # --- brutal discontinuity ---
-    if np.random.rand() < 0.3:
-        dominant = np.random.choice([0, 1, 2])
-        total = np.random.uniform(min_total, max_total)
+outFilename = "random-fixed-height"
+plt.tight_layout()
+plt.savefig(path / str(outFilename + "_spectra"), dpi=300)
+plt.show()
 
-        new = np.zeros(3)
-        new[dominant] = total
+#%% ================= FIXED STRUCTURE (USER DEFINED) =================
 
-    thicknesses.append(new)
-    current = new
+Cu_nm   = [0, 0, 12, 0, 13, 31, 20, 35, 40, 33]
+Cu2O_nm = [30, 38, 9, 76, 1, 2, 9, 17, 7, 26]
+CuO_nm  = [0, 0, 10, 0, 9, 33, 24, 29, 48, 33]
 
-thicknesses = np.array(thicknesses)
-thicknesses = thicknesses[::-1]
+thicknesses = np.array(list(zip(Cu_nm, Cu2O_nm, CuO_nm)))
+
+n_spectra = len(thicknesses)
+
+
+
+#%% ================= SPECTRA PLOTS =====================
+color_map = {
+    "Cu": [0.98,0.42,0.14],
+    "Cu2O": [0.98,0.67,0.15],
+    "CuO": [0.57,0.57,0.57],
+    "Vacuum": "blue",
+}
+fig, ax = plt.subplots(figsize=(7,5))
+
+spectra_index = np.arange(n_spectra)
+base_offset = np.zeros(n_spectra)
+
+labels = ["Cu", "Cu2O", "CuO"]
+
+for i, mat in enumerate(labels):
+
+    layer = thicknesses[:, i]
+
+    ax.fill_between(
+        spectra_index,
+        base_offset,
+        base_offset + layer,
+        color=color_map[mat],
+        alpha=0.3,
+        label=mat
+    )
+
+    ax.plot(
+        spectra_index,
+        base_offset + layer,
+        color=color_map[mat],
+        linewidth=2
+    )
+
+    base_offset += layer
+
+ax.set_xlabel("Spectrum index", fontsize=14)
+ax.set_ylabel("Layer height / nm", fontsize=14)
+
+ax.legend(loc = "upper right")
+ax.tick_params(axis='both', labelsize=12)
+
+for spine in ax.spines.values():
+    spine.set_linewidth(2)
+
+outFilename = "complete-random"
+plt.tight_layout()
+plt.savefig(path / str(outFilename + "_spectra"), dpi=300)
+plt.show()
 
 #%% ================= FORWARD MODEL =====================
 def simulate_T(d):
@@ -244,52 +350,4 @@ np.save(path / str(outFilename + "_benchmark_wl.npy"), wl_nm)
 
 print("Saved benchmark dataset")
 
-#%% ================= STACKED PLOT =====================
-color_map = {
-    "Cu": "orange",
-    "Cu2O": "red",
-    "CuO": "green",
-}
-
-fig, ax = plt.subplots(figsize=(7,5))
-
-spectra_index = np.arange(n_spectra)
-base_offset = np.zeros(n_spectra)
-
-labels = ["Cu", "Cu2O", "CuO"]
-
-for i, mat in enumerate(labels):
-
-    layer = thicknesses[:, i]
-
-    ax.fill_between(
-        spectra_index,
-        base_offset,
-        base_offset + layer,
-        color=color_map[mat],
-        alpha=0.3,
-        label=mat
-    )
-
-    ax.plot(
-        spectra_index,
-        base_offset + layer,
-        color=color_map[mat],
-        linewidth=2
-    )
-
-    base_offset += layer
-
-ax.set_xlabel("Spectrum index", fontsize=14)
-ax.set_ylabel("Layer height / nm", fontsize=14)
-
-ax.legend()
-ax.tick_params(axis='both', labelsize=12)
-
-for spine in ax.spines.values():
-    spine.set_linewidth(2)
-
-plt.tight_layout()
-plt.savefig(path / str(outFilename + "_structure"), dpi=300)
-plt.show()
-#%%
+#%% 

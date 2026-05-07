@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 
 #%% ================== User settings =====================
-fileName = "sample9-remeasured_Cu_Cu2O_CuO-1W-540s.csv"
+fileName = "benchmark-simple-structure-sigma_2_and_6-scale-0.56-mutationrate-0.5.csv"
 additional_folder = ""
 
 results_base = Path(__file__).parent / additional_folder / fileName
@@ -262,6 +262,116 @@ ax.tick_params(axis='both', labelsize=14)
 
 plt.tight_layout()
 plt.savefig(out_dir / "thickness_stacked_layers.png", dpi=300)
+plt.show()
+
+# =================================================
+# STACKED PLOT Spectrum Index
+# =================================================
+color_map = {
+    "Cu": [0.98,0.42,0.14],
+    "Cu2O": [0.98,0.67,0.15],
+    "CuO": [0.57,0.57,0.57],
+    "Vacuum": "blue",
+}
+
+fig, ax = plt.subplots(figsize=(7,5))
+base_offset = np.zeros(len(grouped))
+legend_handles = {}
+
+n_layers = len(layer_indices)
+x_index = np.arange(n_spec)
+
+for idx, i in enumerate(layer_indices):
+
+    # --- enforce drawing hierarchy ---
+    # lower layers → higher zorder (drawn on top)
+    z_base = 100 - idx * 10
+
+    thickness_series = grouped[f"layer_{i}_thickness_nm"].values
+    matrix_mat = grouped[f"layer_{i}_matrix"].iloc[0]
+
+    layer_offset = base_offset.copy()
+
+    # ---------- inclusions ----------
+    for j in layer_inclusions[i]:
+        inc_mat = grouped[f"layer_{i}_inc_{j}_material"].iloc[0]
+        if pd.isna(inc_mat):
+            continue
+
+        inc_frac_series = grouped[f"layer_{i}_inc_{j}_fraction"].values
+        inc_height = thickness_series * inc_frac_series
+
+        color = color_map.get(inc_mat, "gray")
+
+        ax.fill_between(
+            x_index,
+            layer_offset,
+            layer_offset + inc_height,
+            color=color,
+            alpha=1,
+            zorder=z_base
+        )
+
+        line, = ax.plot(
+            x_index,
+            layer_offset + inc_height,
+            color=color,
+            linestyle="--",
+            linewidth=3,
+            zorder=z_base + 1
+        )
+
+        if inc_mat not in legend_handles:
+            legend_handles[inc_mat] = line
+
+        layer_offset += inc_height
+
+    # ---------- matrix ----------
+    matrix_color = color_map.get(matrix_mat, "gray")
+
+    ax.fill_between(
+        x_index,
+        base_offset,
+        base_offset + thickness_series,
+        color=matrix_color,
+        alpha=0.15,
+        zorder=z_base
+    )
+
+    line, = ax.plot(
+        x_index,
+        base_offset + thickness_series,
+        color=matrix_color,
+        linewidth=3,
+        zorder=z_base + 2
+    )
+
+    if matrix_mat not in legend_handles:
+        legend_handles[matrix_mat] = line
+
+    base_offset += thickness_series
+
+
+ax.set_xlabel("Spectrum Index", fontsize=14)
+ax.set_ylabel("Layer height / nm", fontsize=14)
+
+ax.legend(legend_handles.values(), legend_handles.keys(), title="Materials")
+
+# ---- RMSE inset ----
+ax_inset = inset_axes(ax, width="30%", height="30%", loc='upper left', borderpad=1)
+rmse_series = grouped["RMSE"]
+
+ax_inset.plot(x_index, rmse_series, color="black", linewidth=2)
+ax_inset.set_xlabel("Spectrum Index")
+ax_inset.set_ylabel("RMSE")
+ax_inset.tick_params(axis='both', labelsize=10)
+ax_inset.yaxis.tick_right()
+ax_inset.yaxis.set_label_position("right")
+# main axis ticks
+ax.tick_params(axis='both', labelsize=14)
+
+plt.tight_layout()
+plt.savefig(out_dir / "thickness_stacked_layers-index.png", dpi=300)
 plt.show()
 
 #%% ================== 4) Residuals =====================
