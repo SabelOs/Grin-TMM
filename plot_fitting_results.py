@@ -356,7 +356,7 @@ for idx, i in enumerate(layer_indices):
 ax.set_xlabel("Spectrum Index", fontsize=14)
 ax.set_ylabel("Layer height / nm", fontsize=14)
 
-ax.legend(legend_handles.values(), legend_handles.keys(), title="Materials")
+ax.legend(legend_handles.values(), legend_handles.keys(), title="Materials", loc="upper right")
 
 # ---- RMSE inset ----
 ax_inset = inset_axes(ax, width="30%", height="30%", loc='upper left', borderpad=1)
