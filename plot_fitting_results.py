@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 
 #%% ================== User settings =====================
-fileName = "benchmark-simple-structure-sigma_2_and_6-scale-0.56-mutationrate-0.5.csv"
+fileName = "Sample9-remeasured-2W-60s-Cu-Cu2O-CuO-scale0_6-for-Thesis.csv"
 additional_folder = ""
 
 results_base = Path(__file__).parent / additional_folder / fileName
@@ -246,7 +246,7 @@ for idx, i in enumerate(layer_indices):
 ax.set_xlabel("Δx / µm", fontsize=14)
 ax.set_ylabel("Layer height / nm", fontsize=14)
 
-ax.legend(legend_handles.values(), legend_handles.keys(), title="Materials")
+#ax.legend(legend_handles.values(), legend_handles.keys(), title="Materials",loc="lower right")
 
 # ---- RMSE inset ----
 ax_inset = inset_axes(ax, width="30%", height="30%", loc='upper right')
@@ -256,7 +256,8 @@ ax_inset.plot(x_axis_grouped, rmse_series, color="black", linewidth=2)
 ax_inset.set_xlabel("Δx / µm")
 ax_inset.set_ylabel("RMSE")
 ax_inset.tick_params(axis='both', labelsize=10)
-
+#ax_inset.yaxis.tick_right()
+#ax_inset.yaxis.set_label_position("right")
 # main axis ticks
 ax.tick_params(axis='both', labelsize=14)
 

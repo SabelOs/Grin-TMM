@@ -89,8 +89,8 @@ secondary_guesses = {}
 
 
 #--------- File Settings -----------
-SPE_file  = path + "/16_03_2026-Sample9-remeasured/GRIN-3W-120s.SPE"
-Lamp_file = path + "/16_03_2026-Sample9-remeasured/Substrate-3W.SPE"
+SPE_file  = path + "/16_03_2026-Sample9-remeasured/GRIN-2W-60s.SPE"
+Lamp_file = path + "/16_03_2026-Sample9-remeasured/Substrate-2W.SPE"
 
 #test_CSV = path + "/sampCu9.csv"
 
@@ -99,7 +99,7 @@ substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
 #saveName = "sample9-remeasured_Cu_Cu2O_CuO-40s_3W_scale-0_65"
-saveName = "benchmark-simple-structure-sigma_2_and_6-scale-0.56-mutationrate-0.5"
+saveName = "Sample9-remeasured-2W-60s-Cu-Cu2O-CuO-scale0_6-for-Thesis"
 
 #-------- GA Settings -------------
 device = "cpu"
@@ -122,7 +122,7 @@ sigma = [2,6]
 
 RMSE_convergence_threshold = 0.0
 
-scaling_parameter = 0.56 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
+scaling_parameter = 0.6 #0.56 scales the transmission amplitude by this factor (used for calibration afterwards)
 
 # -------- Wavelength cut -------- 
 enable_wl_cut = True 
@@ -165,9 +165,9 @@ if enable_wl_cut:
 
 #======== BENCHMARK IMPORT ========
 # --- load wavelength axis ---
-wl_nm = np.load("easy-structure_benchmark_wl.npy")
+#wl_nm = np.load("easy-structure_benchmark_wl.npy")
 # --- load transmission ---
-T_exp_all = np.load("easy-structure_benchmark_T.npy")
+#T_exp_all = np.load("easy-structure_benchmark_T.npy")
 
 lambda_nm = torch.tensor(wl_nm, dtype=torch.float64, device=device)
 """
