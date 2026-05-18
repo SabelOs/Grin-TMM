@@ -54,24 +54,26 @@ layers = [
         "matrix" : "Cu",
         "shape" : "sphere",
         "thickness_init" : 40.0,
-        "thickness_bounds" : (0.0, 60.0),
-        "inclusions": None,
-    },
-    {
-        "name": "Cu2O",
-        "matrix": "Cu2O",
-        "shape": "sphere",
-        "thickness_init": 0.0,
-        "thickness_bounds": (0.0, 250.0),
-        "inclusions": None,
-    },
-    {
-        "name" : "CuO",
-        "matrix" : "CuO",
-        "shape" : "sphere",
-        "thickness_init" : 0.0,
-        "thickness_bounds" : (0.0, 100.0),
-        "inclusions": None,
+        "thickness_bounds" : (0.0, 140.0),
+        "inclusions": [{
+            "material": "Cu2O",
+            "shape": "sphere",
+            "fraction_init": 0.0,
+            "bounds": (0.0, 1.0),
+        },
+        {
+            "material": "CuO",
+            "shape": "sphere",
+            "fraction_init": 0.0,
+            "bounds": (0.0, 1.0),
+        },
+        {
+            "material": "Vacuum",
+            "shape": "sphere",
+            "fraction_init": 0.0,
+            "bounds": (0.0, 1.0),
+        },
+        ]
     },
 ]
 
@@ -89,7 +91,7 @@ secondary_guesses = {}
 
 
 #--------- File Settings -----------
-SPE_file  = path + "/16_03_2026-Sample9-remeasured/GRIN-2W-60s.SPE"
+SPE_file  = path + "/16_03_2026-Sample9-remeasured/GRIN-2W-40s.SPE"
 Lamp_file = path + "/16_03_2026-Sample9-remeasured/Substrate-2W.SPE"
 
 #test_CSV = path + "/sampCu9.csv"
@@ -99,7 +101,7 @@ substrateSpectrum_no = 2 #Select which of the lamp spectrums is used (in case of
 
 spectra_fitting_range = -1 #set to -1 to fit all spectra imported
 #saveName = "sample9-remeasured_Cu_Cu2O_CuO-40s_3W_scale-0_65"
-saveName = "Sample9-remeasured-2W-60s-Cu-Cu2O-CuO-scale0_6-for-Thesis"
+saveName = "Sample9-remeasured-2W-40s-Cu_Cu2O_CuO_Vacuum-inclusion-model-for-Thesis"
 
 #-------- GA Settings -------------
 device = "cpu"

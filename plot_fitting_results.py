@@ -8,8 +8,8 @@ from pathlib import Path
 import re
 
 #%% ================== User settings =====================
-fileName = "Sample9-remeasured-2W-60s-Cu-Cu2O-CuO-scale0_6-for-Thesis.csv"
-additional_folder = ""
+fileName = "sample9_Cu_Cu-Cu2O-sphere_CuO-40s_2W_scale-0_6.csv"
+additional_folder = "Sample-9-Grin-2W-40s"
 
 results_base = Path(__file__).parent / additional_folder / fileName
 
@@ -41,16 +41,17 @@ for spec in spectra:
 
     plt.figure(figsize=(6, 4))
     plt.plot(df_spec["wavelength_nm"], df_spec["T_exp"], "k", label="Measured")
-    plt.plot(df_spec["wavelength_nm"], df_spec["T_fit"], "r--", label="TMM fit")
+    #plt.plot(df_spec["wavelength_nm"], df_spec["T_fit"], "r--", label="TMM fit")
 
-    plt.xlabel("Wavelength (nm)")
-    plt.ylabel("Transmittance")
-    plt.title(f"Spectrum {spec} (Δx = {dx:.1f} µm)")
-    plt.legend()
+    plt.xlabel("Wavelength / nm", fontsize=14)
+    plt.ylabel("Transmittance", fontsize=14)
+    #plt.title(f"Spectrum {spec} (Δx = {dx:.1f} µm)")
+    #plt.legend()
     plt.tight_layout()
 
     plt.savefig(out_dir / f"comparison_{spec}_spectrum.png", dpi=300)
     plt.close()
+
 
 #%% ================== 2) RMSE vs Δx =====================
 rmse_vals = df.groupby("spectrum")["RMSE"].first()
