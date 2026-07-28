@@ -8,7 +8,8 @@ from pathlib import Path
 import re
 
 #%% ================== User settings =====================
-fileName = "sample9_Cu_Cu-Cu2O-sphere_CuO-40s_2W_scale-0_6.csv"
+fileName = "sample9_Cu_Cu2O_CuO-40s_2W_scale-1.csv"
+#additional_folder = "Sample-9-Grin-2W-40s"
 additional_folder = "Sample-9-Grin-2W-40s"
 
 results_base = Path(__file__).parent / additional_folder / fileName
@@ -52,6 +53,25 @@ for spec in spectra:
     plt.savefig(out_dir / f"comparison_{spec}_spectrum.png", dpi=300)
     plt.close()
 
+
+#%----------------- 1.5) Combined spectrum plot of every nth spectrum without the fitting curves --------------
+plt.figure(figsize=(6, 4))
+nth_spectrum = 5  # Plot every nth spectrum
+#create colormap viridis for each of the
+cmap = plt.cm.viridis
+colors = cmap(np.linspace(0, 1, len(spectra[::nth_spectrum])))
+for i, spec in enumerate(spectra[::nth_spectrum]):
+    df_spec = df[df["spectrum"] == spec]
+    dx = spec * dx_per_spec
+    plt.plot(df_spec["wavelength_nm"], df_spec["T_exp"], color=colors[i], label=f"Δx = {dx:.1f} µm")
+
+plt.xlabel("Wavelength / nm", fontsize=14)
+plt.ylabel("Transmittance", fontsize=14)
+plt.legend()
+plt.tight_layout()
+
+plt.savefig(out_dir / f"combined_spectra_{nth_spectrum}.png", dpi=300)
+plt.close()
 
 #%% ================== 2) RMSE vs Δx =====================
 rmse_vals = df.groupby("spectrum")["RMSE"].first()
