@@ -8,8 +8,9 @@ from pathlib import Path
 import re
 
 #%% ================== User settings =====================
-fileName = "sample9_Cu_Cu-Cu2O-sphere_CuO-40s_2W_scale-0_6.csv"
+fileName = "benchmark-random_pop50_gen1000_sigma2_6_mutrate0_3_mutratestall_5_elite_0_1_stall50_crossover0_8_bugfix-added-mutationstallincrease-smartScaling.csv"
 additional_folder = "Sample-9-Grin-2W-40s"
+additional_folder = ""
 
 results_base = Path(__file__).parent / additional_folder / fileName
 
